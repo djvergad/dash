@@ -33,6 +33,9 @@
 #include "http-header.h"
 #include "mpeg-header.h"
 #include <string.h>
+#include <cmath>
+#include <ns3/inet6-socket-address.h>
+#include <ns3/inet-socket-address.h>
 
 NS_LOG_COMPONENT_DEFINE("DashClient");
 
