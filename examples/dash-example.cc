@@ -39,7 +39,7 @@ main(int argc, char *argv[])
   bool tracing = false;
   uint32_t maxBytes = 100;
   uint32_t users = 1;
-  double target_dt = 2;
+  double target_dt = 7;
   double stopTime = 100.0;
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
