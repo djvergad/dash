@@ -411,7 +411,7 @@ namespace ns3
 
   MPEGPlayer::MPEGPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_target_dt(Seconds(2.0))
+          100000000), m_target_dt(Seconds(7.0))
   {
     NS_LOG_FUNCTION (this);
   }
