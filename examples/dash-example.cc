@@ -57,7 +57,8 @@ main(int argc, char *argv[])
   cmd.AddValue("targetDt",
       "The target time difference between receiving and playing a frame.",
       target_dt);
-  cmd.AddValue("stopTime", "The time when the clients will stop requesting segments", stopTime);
+  cmd.AddValue("stopTime",
+      "The time when the clients will stop requesting segments", stopTime);
 
   cmd.Parse(argc, argv);
 
@@ -76,7 +77,6 @@ main(int argc, char *argv[])
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
   pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
-
   NetDeviceContainer devices;
   devices = pointToPoint.Install(nodes);
 
