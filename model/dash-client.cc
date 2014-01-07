@@ -558,7 +558,11 @@ namespace ns3
         << " output: " << output
     );
 
-    return output * currRate;
+    uint32_t result = output * currRate;
+    result = result > 100000 ? result : 100000;
+    result = result < 400000 ? result : 400000;
+
+    return result;
   }
 
   void
