@@ -559,8 +559,8 @@ namespace ns3
     );
 
     uint32_t result = output * currRate;
-    result = result > 100000 ? result : 100000;
-    result = result < 400000 ? result : 400000;
+    /*result = result > 100000 ? result : 100000;
+    result = result < 400000 ? result : 400000;*/
 
     return result;
   }
