@@ -217,6 +217,8 @@ namespace ns3
   {
     NS_LOG_FUNCTION (this);
 
+    std::priority_queue<Socket> toSend;
+
     for (std::map<Ptr<Socket>, std::queue<Packet> >::iterator iter =
         m_queues.begin(); iter != m_queues.end(); ++iter)
       {
