@@ -130,8 +130,8 @@ namespace ns3
             && m_socket->GetSocketType() != Socket::NS3_SOCK_SEQPACKET)
           {
             NS_FATAL_ERROR("Using HTTP with an incompatible socket type. "
-                "HTTP requires SOCK_STREAM or SOCK_SEQPACKET. "
-                "In other words, use TCP instead of UDP.");
+            "HTTP requires SOCK_STREAM or SOCK_SEQPACKET. "
+            "In other words, use TCP instead of UDP.");
           }
 
         if (Inet6SocketAddress::IsMatchingType(m_peer))
@@ -145,13 +145,11 @@ namespace ns3
 
         m_socket->Connect(m_peer);
 //      m_socket->ShutdownRecv ();
-        m_socket->SetRecvCallback(
-            MakeCallback(&DashClient::HandleRead, this));
+        m_socket->SetRecvCallback(MakeCallback(&DashClient::HandleRead, this));
         m_socket->SetConnectCallback(
             MakeCallback(&DashClient::ConnectionSucceeded, this),
             MakeCallback(&DashClient::ConnectionFailed, this));
-        m_socket->SetSendCallback(
-            MakeCallback(&DashClient::DataSend, this));
+        m_socket->SetSendCallback(MakeCallback(&DashClient::DataSend, this));
       }
   }
 
@@ -559,8 +557,24 @@ namespace ns3
     );
 
     uint32_t result = output * currRate;
+
+    result = result > 537823 ? 537823
+        : result > 384159 ? 384159
+        : result > 274399 ? 274399
+        : result > 195999 ? 195999
+        : result > 140000 ? 140000
+        : result > 100000 ? 100000
+        : result > 71428 ? 71428
+        : result > 51020 ? 51020
+        : result > 36443 ? 36443
+        : result > 26030 ? 26030
+        : result > 18593 ? 18593
+        : 13281;
+
+/*    std::cout << currRate << " " << output << " " << result << std::endl;*/
+
     /*result = result > 100000 ? result : 100000;
-    result = result < 400000 ? result : 400000;*/
+     result = result < 400000 ? result : 400000;*/
 
     return result;
   }
