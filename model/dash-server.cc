@@ -34,12 +34,12 @@
 #include "http-header.h"
 #include "mpeg-header.h"
 #include <ns3/random-variable.h>
+#include <ns3/tcp-socket.h>
 
 namespace ns3
 {
   NS_LOG_COMPONENT_DEFINE("DashServer");
-  NS_OBJECT_ENSURE_REGISTERED (DashServer)
-  ;
+  NS_OBJECT_ENSURE_REGISTERED(DashServer);
 
   TypeId
   DashServer::GetTypeId(void)
@@ -68,12 +68,6 @@ namespace ns3
   {
     NS_LOG_FUNCTION (this);
   }
-
-  /*uint32_t DashServer::GetTotalRx () const
-   {
-   NS_LOG_FUNCTION (this);
-   return m_totalRx;
-   }*/
 
   Ptr<Socket>
   DashServer::GetListeningSocket(void) const
@@ -222,6 +216,27 @@ namespace ns3
   DashServer::DataSend(Ptr<Socket> socket, uint32_t)
   {
     NS_LOG_FUNCTION (this);
+
+    for (std::map<Ptr<Socket>, std::queue<Packet> >::iterator iter =
+        m_queues.begin(); iter != m_queues.end(); ++iter)
+      {
+        HTTPHeader httpHeader;
+        MPEGHeader mpegHeader;
+
+        if (iter->second.size())
+          {
+            Ptr<Packet> frame = iter->second.front().Copy();
+
+            frame->RemoveHeader(mpegHeader);
+            frame->RemoveHeader(httpHeader);
+
+            NS_LOG_INFO ( "VidId: " << httpHeader.GetVideoId()
+                << " rxAv= " << iter->first->GetRxAvailable()
+                << " queue= "<< iter->second.size()
+                << " res= " << httpHeader.GetResolution()
+            );
+          }
+      }
 
     while (!m_queues[socket].empty())
       {
