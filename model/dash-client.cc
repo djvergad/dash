@@ -36,6 +36,7 @@
 #include <cmath>
 #include <ns3/inet6-socket-address.h>
 #include <ns3/inet-socket-address.h>
+#include "ns3/random-variable.h"
 
 NS_LOG_COMPONENT_DEFINE("DashClient");
 
@@ -75,7 +76,7 @@ namespace ns3
   }
 
   DashClient::DashClient() :
-      m_socket(0), m_connected(false), m_totBytes(0), m_bitRate(10000), m_startedReceiving(
+      m_socket(0), m_connected(false), m_totBytes(0), m_bitRate(13281), m_startedReceiving(
           Seconds(0)), m_bytesRecv(0), m_lastRecv(Seconds(0)), m_sumDt(
           Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++)
   {
@@ -558,7 +559,7 @@ namespace ns3
 
     uint32_t result = output * currRate;
 
-    result = result > 537823 ? 537823
+    uint32_t nextRate = result > 537823 ? 537823
         : result > 384159 ? 384159
         : result > 274399 ? 274399
         : result > 195999 ? 195999
@@ -571,12 +572,26 @@ namespace ns3
         : result > 18593 ? 18593
         : 13281;
 
-/*    std::cout << currRate << " " << output << " " << result << std::endl;*/
+    if (nextRate > currRate)
+      {
+        double incrProb = std::pow(0.8, (std::log10((double)currRate) -5)/ std::log10(1.4));
+
+        UniformVariable uv;
+        double rand = uv.GetValue();
+        NS_LOG_INFO(currRate << " " << incrProb << " " << rand);
+        if (rand  > incrProb)
+          {
+            nextRate = currRate;
+          }
+
+      }
+
+    NS_LOG_INFO( currRate << " " << output << " " << result);
 
     /*result = result > 100000 ? result : 100000;
      result = result < 400000 ? result : 400000;*/
 
-    return result;
+    return nextRate;
   }
 
   void
