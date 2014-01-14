@@ -241,7 +241,7 @@ namespace ns3
       {
         int bytes;
         Ptr<Packet> frame = m_queues[socket].front().Copy();
-        if ((bytes = socket->Send(frame)) != frame->GetSize())
+        if ((bytes = socket->Send(frame)) != (int) frame->GetSize())
           {
             NS_LOG_INFO("Could not send frame");
             if (bytes != -1)
