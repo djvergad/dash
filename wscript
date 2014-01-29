@@ -10,6 +10,8 @@ def build(bld):
     module = bld.create_ns3_module('dash', ['core', 'applications','point-to-point'])
     module.source = [
          'model/dash-client.cc',
+         'model/http-parser.cc',
+         'model/mpeg-player.cc',
          'model/dash-server.cc',
          'model/http-header.cc',
          'model/mpeg-header.cc',
@@ -28,6 +30,8 @@ def build(bld):
     headers.module = 'dash'
     headers.source = [
          'model/dash-client.h',
+         'model/http-parser.h',
+         'model/mpeg-player.h',
          'model/dash-server.h',
          'model/http-header.h',
          'model/mpeg-header.h',

@@ -21,73 +21,14 @@
 #ifndef DASH_CLIENT_H
 #define DASH_CLIENT_H
 
-#include "ns3/address.h"
 #include "ns3/application.h"
-#include "ns3/event-id.h"
 #include "ns3/ptr.h"
+#include "ns3/socket.h"
+#include "mpeg-player.h"
 #include "ns3/traced-callback.h"
-#include <queue>
-#include "mpeg-header.h"
+#include "http-parser.h"
 
 namespace ns3 {
-
-class Address;
-class Socket;
-class DashClient;
-
-
-
-/*typedef void (*func_t)(Ptr<Packet>);*/
-
-class HTTPParser {
-public:
-	HTTPParser ();
-    virtual ~HTTPParser ();
-	void ReadSocket(Ptr<Socket> socket);
-	void SetApp(DashClient *app);
-
-
-private:
-	uint8_t m_buffer[MPEG_MAX_MESSAGE];
-	uint32_t m_bytes;
-	DashClient *m_app;
-
-};
-
-#define MPEG_PLAYER_PAUSED 1
-#define MPEG_PLAYER_PLAYING 2
-#define MPEG_PLAYER_NOT_STARTED 3
-
-
-class MPEGPlayer {
-public:
-	MPEGPlayer();
-    virtual ~MPEGPlayer();
-	void ReceiveFrame(Ptr<Packet> message);
-	int GetQueueSize();
-	void Start();
-	Time GetRealPlayTime(Time playTime);
-	/*uint32_t CalcSendRate(uint32_t recvRate, Time dt1);*/
-	uint32_t CalcSendRate(uint32_t currRate, double currDt, double diff);
-
-	int m_state;
-	Time m_interruption_time;
-	int m_interrruptions;
-
-	Time m_start_time;
-	uint32_t m_totalRate;
-	uint32_t m_minRate;
-	uint32_t m_framesPlayed;
-	Time m_target_dt;
-
-private:
-	void PlayFrame();
-
-	Time m_lastpaused;
-	std::queue<Ptr<Packet> > m_queue;
-
-};
-
 
 /**
  * \ingroup applications
@@ -136,7 +77,7 @@ public:
   void GetStats();
   void SetPlayerTargetTime(Time time);
 
-  MPEGPlayer	  m_player;
+  MpegPlayer	  m_player;
 
 
 protected:
@@ -156,7 +97,7 @@ private:
   uint32_t        m_totBytes;     // Total bytes sent so far
   TypeId          m_tid;
   TracedCallback<Ptr<const Packet> > m_txTrace;
-  HTTPParser	  m_parser;
+  HttpParser	  m_parser;
   uint32_t        m_videoId;
   uint32_t        m_segmentId;
   uint32_t        m_bitRate;

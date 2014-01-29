@@ -78,7 +78,7 @@ main(int argc, char *argv[])
   pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
   pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
   NetDeviceContainer devices;
-  devices = pointToPoint.Install(nodes);
+  devices = pointToPoint.Install(nodes) ;
 
 //
 // Install the internet stack on the nodes
