@@ -14,28 +14,41 @@
 
 namespace ns3
 {
+  enum
+  {
+    MPEG_PLAYER_PAUSED, MPEG_PLAYER_PLAYING, MPEG_PLAYER_NOT_STARTED
+  };
 
-#define MPEG_PLAYER_PAUSED 1
-#define MPEG_PLAYER_PLAYING 2
-#define MPEG_PLAYER_NOT_STARTED 3
+  enum Protocol
+  {
+    FUZZY, AAASH
+  };
 
   class MpegPlayer
   {
   public:
     MpegPlayer();
+
     virtual
     ~MpegPlayer();
+
     void
     ReceiveFrame(Ptr<Packet> message);
+
     int
     GetQueueSize();
+
     void
     Start();
+
     Time
     GetRealPlayTime(Time playTime);
-    /*uint32_t CalcSendRate(uint32_t recvRate, Time dt1);*/
+
     uint32_t
     CalcSendRate(uint32_t currRate, double currDt, double diff);
+
+    Time
+    CalcSendTime(uint32_t currRate, double currDt, double diff);
 
     int m_state;
     Time m_interruption_time;
@@ -46,10 +59,17 @@ namespace ns3
     uint32_t m_minRate;
     uint32_t m_framesPlayed;
     Time m_target_dt;
+    Protocol m_protocol;
 
   private:
     void
     PlayFrame();
+
+    uint32_t
+    CalcFuzzy(uint32_t currRate, double currDt, double diff);
+
+    uint32_t
+    CalcAAASH(uint32_t currRate, double currDt, double diff);
 
     Time m_lastpaused;
     std::queue<Ptr<Packet> > m_queue;

@@ -19,7 +19,7 @@ namespace ns3
 
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_target_dt(Seconds(7.0))
+          100000000), m_target_dt(Seconds(7.0)), m_protocol(FUZZY)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -79,6 +79,30 @@ namespace ns3
 
   uint32_t
   MpegPlayer::CalcSendRate(uint32_t currRate, double currDt, double diff)
+  {
+    switch (m_protocol)
+      {
+    case FUZZY:
+      return CalcFuzzy(currRate, currDt, diff);
+      break;
+    case AAASH:
+      return CalcAAASH(currRate, currDt, diff);
+      break;
+    default:
+      NS_LOG_ERROR("Wrong protocol");
+      Simulator::Stop();
+      return -1;
+      }
+  }
+
+  uint32_t
+  MpegPlayer::CalcAAASH(uint32_t currRate, double currDt, double diff)
+  {
+    return currRate;
+  }
+
+  uint32_t
+  MpegPlayer::CalcFuzzy(uint32_t currRate, double currDt, double diff)
   {
     double slow = 0, ok = 0, fast = 0, falling = 0, steady = 0, rising = 0, r1 =
         0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, p2 =
@@ -181,6 +205,12 @@ namespace ns3
      result = result < 400000 ? result : 400000;*/
 
     return nextRate;
+  }
+
+  Time
+  MpegPlayer::CalcSendTime(uint32_t currRate, double currDt, double diff)
+  {
+    return Seconds(0);
   }
 
   void

@@ -110,8 +110,10 @@ namespace ns3
     NS_LOG_FUNCTION (this);
 
     // Create the socket if not already
+
     if (!m_socket)
       {
+
         m_socket = Socket::CreateSocket(GetNode(), m_tid);
 
         // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
@@ -119,8 +121,8 @@ namespace ns3
             && m_socket->GetSocketType() != Socket::NS3_SOCK_SEQPACKET)
           {
             NS_FATAL_ERROR("Using HTTP with an incompatible socket type. "
-            "HTTP requires SOCK_STREAM or SOCK_SEQPACKET. "
-            "In other words, use TCP instead of UDP.");
+                "HTTP requires SOCK_STREAM or SOCK_SEQPACKET. "
+                "In other words, use TCP instead of UDP.");
           }
 
         if (Inet6SocketAddress::IsMatchingType(m_peer))
@@ -248,15 +250,6 @@ namespace ns3
             << " Bitrate = " << (8 * m_totBytes / (Simulator::Now() - m_player.m_start_time).GetSeconds())
             << " instBit = " << instBitrate
             << " normBit = " << normBitrate);
-        /*
-         (void) bitrate;
-         (void) instBitrate;
-         (void) normBitrate;*/
-        /*if (false) {
-         std::cout << bitrate << instBitrate << normBitrate << std::endl;
-         }*/
-
-        //	  m_bitRate = normBitrate;
       }
     m_player.ReceiveFrame(&message);
 
@@ -280,9 +273,13 @@ namespace ns3
       {
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
         double old = m_bitRate;
-        m_bitRate = m_player.CalcSendRate(m_bitRate, currDt.GetSeconds(),
-            m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0);
-        RequestSegment(m_bitRate);
+        double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
+
+        m_bitRate = m_player.CalcSendRate(m_bitRate, currDt.GetSeconds(), diff);
+
+        Time requestTime = m_player.CalcSendTime(m_bitRate, currDt.GetSeconds(), diff);
+
+        Simulator::Schedule(requestTime, &DashClient::RequestSegment, this, m_bitRate);
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
@@ -333,6 +330,12 @@ namespace ns3
   DashClient::SetPlayerTargetTime(Time time)
   {
     m_player.m_target_dt = time;
+  }
+
+  void
+  DashClient::SetProtocol(Protocol protocol)
+  {
+    m_player.m_protocol = protocol;
   }
 
 } // Namespace ns3
