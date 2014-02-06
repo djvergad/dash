@@ -12,6 +12,7 @@
 #include "http-header.h"
 #include "mpeg-header.h"
 #include "mpeg-player.h"
+#include <cmath>
 
 NS_LOG_COMPONENT_DEFINE("MpegPlayer");
 namespace ns3

@@ -18,11 +18,12 @@
  * Author: George F. Riley <riley@ece.gatech.edu>
  */
 
-#include "ns3/log.h"
-#include "ns3/uinteger.h"
-#include "ns3/tcp-socket-factory.h"
-#include "ns3/simulator.h"
-
+#include <ns3/log.h>
+#include <ns3/uinteger.h>
+#include <ns3/tcp-socket-factory.h>
+#include <ns3/simulator.h>
+#include <ns3/inet-socket-address.h>
+#include <ns3/inet6-socket-address.h>
 #include "http-header.h"
 #include "dash-client.h"
 
