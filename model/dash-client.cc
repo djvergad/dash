@@ -200,7 +200,7 @@ namespace ns3
   {
     NS_LOG_FUNCTION (this << socket);NS_LOG_LOGIC ("DashClient Connection succeeded");
     m_connected = true;
-    RequestSegment(100000);
+    RequestSegment(m_bitRate);
   }
 
   void

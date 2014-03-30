@@ -39,9 +39,10 @@ main(int argc, char *argv[])
   bool tracing = false;
   uint32_t maxBytes = 100;
   uint32_t users = 1;
-  double target_dt = 7;
+  double target_dt = 0.000005;
   double stopTime = 100.0;
   std::string linkRate = "500Kbps";
+  std::string delay = "5ms";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -61,8 +62,11 @@ main(int argc, char *argv[])
   cmd.AddValue("stopTime",
       "The time when the clients will stop requesting segments", stopTime);
   cmd.AddValue("linkRate",
-      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)", linkRate);
-
+      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
+      linkRate);
+  cmd.AddValue("delay",
+        "The delay of the link connecting the clients to the server (e.g. 5ms)",
+        delay);
   cmd.Parse(argc, argv);
 
 //
@@ -79,7 +83,7 @@ main(int argc, char *argv[])
 //
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
-  pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
+  pointToPoint.SetChannelAttribute("Delay", StringValue(delay));
   NetDeviceContainer devices;
   devices = pointToPoint.Install(nodes);
 
@@ -114,7 +118,7 @@ main(int argc, char *argv[])
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
-      clientApp.Start(Seconds(1.0));
+      clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
 
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));

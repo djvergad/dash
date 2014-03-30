@@ -22,7 +22,8 @@ namespace ns3
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_protocol(
-          AAASH), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay("0s")
+          AAASH), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay(
+          "0s")
   {
     NS_LOG_FUNCTION(this);
   }
@@ -221,10 +222,9 @@ namespace ns3
               }
 
           }
-      }
-    std::cout << "nextRate: " << nextRate << "\tb_delay: "
+      }NS_LOG_INFO ("nextRate: " << nextRate << "\tb_delay: "
         << b_delay.GetSeconds() << "\tb_t: " << b_t.GetSeconds() << "\tb_opt: "
-        << b_opt.GetSeconds() << std::endl;
+        << b_opt.GetSeconds());
 
   }
 
@@ -385,13 +385,13 @@ namespace ns3
   void
   MpegPlayer::LogBufferLevel()
   {
-    /* if (!m_running_fast_start)
-     {
-     m_bufferState.clear();
-     }*/
+    if (!m_running_fast_start)
+      {
+        m_bufferState.clear();
+      }
     m_bufferState.push_back(MilliSeconds(TIME_BETWEEN_FRAMES * m_queue.size()));
-    std::cout << MilliSeconds(TIME_BETWEEN_FRAMES * m_queue.size()).GetSeconds()
-        << std::endl;
+    /*std::cout << MilliSeconds(TIME_BETWEEN_FRAMES * m_queue.size()).GetSeconds()
+     << std::endl;*/
 
   }
 
@@ -454,11 +454,12 @@ namespace ns3
 
     Time b_t = GetRealPlayTime(mpegHeader.GetPlaybackTime());
 
-    if (b_t < m_bufferDelay) {
+    if (m_bufferDelay > Time("0s") && b_t < m_bufferDelay && m_dashClient)
+      {
         m_dashClient->RequestSegment(m_dashClient->m_bitRate);
         m_bufferDelay = Seconds(0);
-    }
-
+        m_dashClient = NULL;
+      }
 
     NS_LOG_INFO(
         Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: "
