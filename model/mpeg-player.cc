@@ -12,6 +12,7 @@
 #include "http-header.h"
 #include "mpeg-header.h"
 #include "mpeg-player.h"
+#include "dash-client.h"
 #include <cmath>
 
 NS_LOG_COMPONENT_DEFINE("MpegPlayer");
@@ -20,7 +21,8 @@ namespace ns3
 
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_target_dt(Seconds(7.0)), m_protocol(FUZZY)
+          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_protocol(
+          AAASH), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay("0s")
   {
     NS_LOG_FUNCTION(this);
   }
@@ -78,32 +80,173 @@ namespace ns3
 
    }*/
 
-  uint32_t
-  MpegPlayer::CalcSendRate(uint32_t currRate, double currDt, double diff)
+  void
+  MpegPlayer::CalcNextSegment(uint32_t currRate, double currDt, double diff,
+      uint32_t & nextRate, Time & b_delay)
   {
     switch (m_protocol)
       {
     case FUZZY:
-      return CalcFuzzy(currRate, currDt, diff);
+      CalcFuzzy(currRate, currDt, diff, nextRate, b_delay);
       break;
     case AAASH:
-      return CalcAAASH(currRate, currDt, diff);
+      CalcAAASH(currRate, currDt, diff, nextRate, b_delay);
       break;
     default:
       NS_LOG_ERROR("Wrong protocol");
       Simulator::Stop();
-      return -1;
       }
   }
 
-  uint32_t
-  MpegPlayer::CalcAAASH(uint32_t currRate, double currDt, double diff)
+  void
+  MpegPlayer::CalcAAASH(uint32_t currRate, double currDt, double diff,
+      uint32_t & nextRate, Time & b_delay)
   {
-    return currRate;
+    uint32_t rates[] =
+    /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
+     274399, 384159, 537823 };*/
+      { 45000, 89000, 131000, 178000, 221000, 263000, 334000, 396000, 522000,
+          595000, 791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000,
+          3527000, 3840000, 4220000 };
+
+    uint32_t rates_size = sizeof(rates) / sizeof(rates[0]);
+
+    double a1 = 0.75;
+    double a2 = 0.33;
+    double a3 = 0.5;
+    double a4 = 0.75;
+    double a5 = 0.9;
+
+    Time b_min("10s");
+    Time b_low("20s");
+    Time b_high("50s");
+    Time b_opt = Seconds((b_low + b_high).GetSeconds() * 0.5);
+
+    Time taf(MilliSeconds(MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES));
+
+    std::list<Time>::iterator i = m_bufferState.end();
+    --i;
+    Time b_t = *i;
+
+    uint32_t rateInd = rates_size;
+    for (uint32_t i = 0; i < rates_size; i++)
+      {
+        if (rates[i] == currRate)
+          {
+            rateInd = i;
+            break;
+          }
+      }
+    if (rateInd == rates_size)
+      {
+        NS_LOG_ERROR("Wrong rate");
+        Simulator::Stop();
+      }
+
+    nextRate = currRate;
+    b_delay = Seconds(0);
+
+    uint32_t r_up = rates[rateInd];
+    uint32_t r_down = rates[rateInd];
+    if (rateInd + 1 < rates_size)
+      {
+        r_up = rates[rateInd + 1];
+      }
+    if (rateInd >= 1)
+      {
+        r_down = rates[rateInd - 1];
+      }
+
+    if (m_running_fast_start && (rateInd != rates_size - 1) && BufferInc()
+        && (currRate <= a1 * m_bitrateEstimate))
+      {
+        if (b_t < b_min)
+          {
+            if (r_up <= a2 * m_bitrateEstimate)
+              {
+                nextRate = r_up;
+              }
+          }
+        else if (b_t < b_low)
+          {
+            if (r_up <= a3 * m_bitrateEstimate)
+              {
+                nextRate = r_up;
+              }
+          }
+        else
+          {
+            if (r_up <= a4 * m_bitrateEstimate)
+              {
+                nextRate = r_up;
+              }
+            if (b_t > b_high)
+              {
+                b_delay = b_high - taf;
+              }
+          }
+      }
+    else
+      {
+        m_running_fast_start = false;
+        if (b_t < b_min)
+          {
+            nextRate = rates[0];
+          }
+        else if (b_t < b_low)
+          {
+            if (currRate != rates[0] && currRate >= m_bitrateEstimate)
+              {
+                nextRate = r_down;
+              }
+          }
+        else if (b_t < b_high)
+          {
+            if ((currRate == rates[rates_size - 1])
+                || (r_up >= a5 * m_bitrateEstimate))
+              {
+                b_delay = std::max(b_t - taf, b_opt);
+              }
+          }
+        else
+          {
+            if ((currRate == rates[rates_size - 1])
+                || (r_up >= a5 * m_bitrateEstimate))
+              {
+                b_delay = std::max(b_t - taf, b_opt);
+              }
+            else
+              {
+                nextRate = r_up;
+              }
+
+          }
+      }
+    std::cout << "nextRate: " << nextRate << "\tb_delay: "
+        << b_delay.GetSeconds() << "\tb_t: " << b_t.GetSeconds() << "\tb_opt: "
+        << b_opt.GetSeconds() << std::endl;
+
   }
 
-  uint32_t
-  MpegPlayer::CalcFuzzy(uint32_t currRate, double currDt, double diff)
+  bool
+  MpegPlayer::BufferInc()
+  {
+    Time last(Seconds(0));
+    for (std::list<Time>::iterator it = m_bufferState.begin();
+        it != m_bufferState.end(); it++)
+      {
+        if (*it < last)
+          {
+            return false;
+          }
+        last = *it;
+      }
+    return true;
+  }
+
+  void
+  MpegPlayer::CalcFuzzy(uint32_t currRate, double currDt, double diff,
+      uint32_t & nextRate, Time & b_delay)
   {
     double slow = 0, ok = 0, fast = 0, falling = 0, steady = 0, rising = 0, r1 =
         0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, p2 =
@@ -178,12 +321,12 @@ namespace ns3
 
     uint32_t result = output * currRate;
 
-    uint32_t nextRate = result > 537823 ? 537823 : result > 384159 ? 384159 :
-                        result > 274399 ? 274399 : result > 195999 ? 195999 :
-                        result > 140000 ? 140000 : result > 100000 ? 100000 :
-                        result > 71428 ? 71428 : result > 51020 ? 51020 :
-                        result > 36443 ? 36443 : result > 26030 ? 26030 :
-                        result > 18593 ? 18593 : 13281;
+    nextRate = result > 537823 ? 537823 : result > 384159 ? 384159 :
+               result > 274399 ? 274399 : result > 195999 ? 195999 :
+               result > 140000 ? 140000 : result > 100000 ? 100000 :
+               result > 71428 ? 71428 : result > 51020 ? 51020 :
+               result > 36443 ? 36443 : result > 26030 ? 26030 :
+               result > 18593 ? 18593 : 13281;
 
     if (nextRate > currRate)
       {
@@ -200,18 +343,56 @@ namespace ns3
 
       }
 
+    b_delay = Seconds(0);
+
     NS_LOG_INFO(currRate << " " << output << " " << result);
 
     /*result = result > 100000 ? result : 100000;
      result = result < 400000 ? result : 400000;*/
 
-    return nextRate;
   }
 
   Time
   MpegPlayer::CalcSendTime(uint32_t currRate, double currDt, double diff)
   {
     return Seconds(0);
+  }
+
+  void
+  MpegPlayer::AddBitRate(Time time, double bitrate)
+  {
+    m_bitrates[time] = bitrate;
+    double sum = 0;
+    int count = 0;
+    for (std::map<Time, double>::iterator it = m_bitrates.begin();
+        it != m_bitrates.end(); ++it)
+      {
+        if (it->first < (Simulator::Now() - Seconds(10)))
+          {
+            m_bitrates.erase(it->first);
+          }
+        else
+          {
+            sum += it->second;
+            count++;
+          }
+      }
+    m_bitrateEstimate = sum / count;
+    /*std::cout << bitrate << "\t\t" << m_bitrateEstimate << "\tsum= " << sum
+     << "\tcount= " << count << std::endl;*/
+  }
+
+  void
+  MpegPlayer::LogBufferLevel()
+  {
+    /* if (!m_running_fast_start)
+     {
+     m_bufferState.clear();
+     }*/
+    m_bufferState.push_back(MilliSeconds(TIME_BETWEEN_FRAMES * m_queue.size()));
+    std::cout << MilliSeconds(TIME_BETWEEN_FRAMES * m_queue.size()).GetSeconds()
+        << std::endl;
+
   }
 
   void
@@ -267,6 +448,17 @@ namespace ns3
         http_header.GetResolution() < m_minRate ?
             http_header.GetResolution() : m_minRate;
     m_framesPlayed++;
+
+    MPEGHeader mpegHeader;
+    m_queue.back()->Copy()->RemoveHeader(mpegHeader);
+
+    Time b_t = GetRealPlayTime(mpegHeader.GetPlaybackTime());
+
+    if (b_t < m_bufferDelay) {
+        m_dashClient->RequestSegment(m_dashClient->m_bitRate);
+        m_bufferDelay = Seconds(0);
+    }
+
 
     NS_LOG_INFO(
         Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: "

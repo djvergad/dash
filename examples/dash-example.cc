@@ -41,9 +41,10 @@ main(int argc, char *argv[])
   uint32_t users = 1;
   double target_dt = 7;
   double stopTime = 100.0;
+  std::string linkRate = "500Kbps";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
-  LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
+   LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
 
 //
 // Allow the user to override any of the defaults at
@@ -59,6 +60,8 @@ main(int argc, char *argv[])
       target_dt);
   cmd.AddValue("stopTime",
       "The time when the clients will stop requesting segments", stopTime);
+  cmd.AddValue("linkRate",
+      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)", linkRate);
 
   cmd.Parse(argc, argv);
 
@@ -75,10 +78,10 @@ main(int argc, char *argv[])
 // Explicitly create the point-to-point link required by the topology (shown above).
 //
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
+  pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
   pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
   NetDeviceContainer devices;
-  devices = pointToPoint.Install(nodes) ;
+  devices = pointToPoint.Install(nodes);
 
 //
 // Install the internet stack on the nodes

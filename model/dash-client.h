@@ -90,9 +90,14 @@ namespace ns3
 
     MpegPlayer m_player;
 
+    void
+    RequestSegment(uint32_t bitRate);
+    uint32_t m_bitRate;
+
   protected:
     virtual void
     DoDispose(void);
+
   private:
     // inherited from Application base class.
     virtual void
@@ -100,8 +105,7 @@ namespace ns3
     virtual void
     StopApplication(void);     // Called at time specified by Stop
 
-    void
-    RequestSegment(uint32_t bitRate);
+
 
     Ptr<Socket> m_socket;       // Associated socket
     Address m_peer;         // Peer address
@@ -114,7 +118,6 @@ namespace ns3
     HttpParser m_parser;
     uint32_t m_videoId;
     uint32_t m_segmentId;
-    uint32_t m_bitRate;
     Time m_startedReceiving;
     uint32_t m_bytesRecv;
     Time m_lastRecv;

@@ -65,7 +65,7 @@ namespace ns3
   }
 
   DashClient::DashClient() :
-      m_socket(0), m_connected(false), m_totBytes(0), m_bitRate(13281), m_startedReceiving(
+      m_bitRate(45000), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_bytesRecv(0), m_lastRecv(Seconds(0)), m_sumDt(
           Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++)
   {
@@ -243,6 +243,13 @@ namespace ns3
 
         double instBitrate = 8 * message.GetSize()
             / (Simulator::Now() - m_lastRecv).GetSeconds();
+
+        if (Simulator::Now() != m_lastRecv)
+          {
+
+            m_player.AddBitRate(Simulator::Now(), instBitrate);
+          }
+
         normBitrate = 0.1 * instBitrate + 0.9 * m_bitRate;
 
         (void) normBitrate;
@@ -272,20 +279,31 @@ namespace ns3
 
     if (mpegHeader.GetFrameId() == MPEG_FRAMES_PER_SEGMENT - 1)
       {
+        m_player.LogBufferLevel();
+
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
-        double old = m_bitRate;
+        uint32_t old = m_bitRate;
         double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
 
-        m_bitRate = m_player.CalcSendRate(m_bitRate, currDt.GetSeconds(), diff);
+        Time bufferDelay;
 
-        Time requestTime = m_player.CalcSendTime(m_bitRate, currDt.GetSeconds(), diff);
+        m_player.CalcNextSegment(m_bitRate, currDt.GetSeconds(), diff,
+            m_bitRate, bufferDelay);
 
-        Simulator::Schedule(requestTime, &DashClient::RequestSegment, this, m_bitRate);
+        if (bufferDelay == Seconds(0))
+          {
+            RequestSegment(m_bitRate);
+          }
+        else
+          {
+            m_player.SchduleBufferWakeup(bufferDelay, this);
+          }
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
-            << " interTime: " << m_player.m_interruption_time.GetSeconds()
-            << " T: " << currDt.GetSeconds() << " dT: "
+            << " estBitRate:" << m_player.GetBitRateEstimate() << " interTime: "
+            << m_player.m_interruption_time.GetSeconds() << " T: "
+            << currDt.GetSeconds() << " dT: "
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
             << std::endl;
 
@@ -309,10 +327,11 @@ namespace ns3
             << " dt: " << (currDt - m_lastDt).GetSeconds()
         );
 
-        m_lastRecv = Simulator::Now();
         m_lastDt = currDt;
 
       }
+    m_lastRecv = Simulator::Now();
+
   }
 
   void

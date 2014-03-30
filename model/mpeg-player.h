@@ -9,6 +9,7 @@
 #define MPEG_PLAYER_H_
 
 #include <queue>
+#include <map>
 #include "ns3/ptr.h"
 #include "ns3/packet.h"
 
@@ -23,6 +24,8 @@ namespace ns3
   {
     FUZZY, AAASH
   };
+
+  class DashClient;
 
   class MpegPlayer
   {
@@ -44,11 +47,32 @@ namespace ns3
     Time
     GetRealPlayTime(Time playTime);
 
-    uint32_t
-    CalcSendRate(uint32_t currRate, double currDt, double diff);
+    void
+    CalcNextSegment(uint32_t currRate, double currDt, double diff,
+        uint32_t & nextRate, Time & b_delay);
 
     Time
     CalcSendTime(uint32_t currRate, double currDt, double diff);
+
+    void
+    AddBitRate(Time time, double bitrate);
+
+    void
+    LogBufferLevel();
+
+    double inline
+    GetBitRateEstimate()
+    {
+      return m_bitrateEstimate;
+    }
+
+    void inline
+    SchduleBufferWakeup(const Time t, DashClient  * client)
+    {
+      m_bufferDelay = t;
+      m_dashClient = client;
+
+    }
 
     int m_state;
     Time m_interruption_time;
@@ -65,14 +89,25 @@ namespace ns3
     void
     PlayFrame();
 
-    uint32_t
-    CalcFuzzy(uint32_t currRate, double currDt, double diff);
+    void
+    CalcFuzzy(uint32_t currRate, double currDt, double diff,
+        uint32_t & nextRate, Time & b_delay);
 
-    uint32_t
-    CalcAAASH(uint32_t currRate, double currDt, double diff);
+    void
+    CalcAAASH(uint32_t currRate, double currDt, double diff,
+        uint32_t & nextRate, Time & b_delay);
+
+    bool
+    BufferInc();
 
     Time m_lastpaused;
     std::queue<Ptr<Packet> > m_queue;
+    std::map<Time, double> m_bitrates;
+    double m_bitrateEstimate;
+    bool m_running_fast_start;
+    std::list<Time> m_bufferState;
+    Time m_bufferDelay;
+    DashClient * m_dashClient;
 
   };
 } // namespace ns3
