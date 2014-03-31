@@ -301,7 +301,7 @@ namespace ns3
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
-            << " estBitRate:" << m_player.GetBitRateEstimate() << " interTime: "
+            << " estBitRate: " << m_player.GetBitRateEstimate() << " interTime: "
             << m_player.m_interruption_time.GetSeconds() << " T: "
             << currDt.GetSeconds() << " dT: "
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
