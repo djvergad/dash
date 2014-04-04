@@ -44,6 +44,23 @@ CallBack(Ptr<NetDevice> device, std::string rate)
 
 }
 
+void
+SwitchCallBack(Ptr<NetDevice> device, const std::string & switchTime,
+    const std::string & lowRate, const std::string & highRate, bool flag)
+{
+
+  std::cout << "============================================\n"
+      "=== CALLBACK: new rate: " << (flag ? lowRate : highRate) << " =====\n"
+      "============================================" << std::endl;
+
+  device->SetAttribute("DataRate",
+      flag ? StringValue(lowRate) : StringValue(highRate));
+  flag = !flag;
+
+  Simulator::Schedule(Time(switchTime), SwitchCallBack, device, switchTime,
+      lowRate, highRate, flag);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -58,6 +75,8 @@ main(int argc, char *argv[])
   std::string highRate = "2000000";
   std::string lowRate = "1000000";
   std::string delay = "5ms";
+  std::string switchTime = "0s";
+  std::string switchStart = "190s";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -82,6 +101,9 @@ main(int argc, char *argv[])
   cmd.AddValue("delay",
       "The delay of the link connecting the clients to the server (e.g. 5ms)",
       delay);
+  cmd.AddValue("switchTime",
+      "The time spent on each state (HIGH or LOW). 0 for no switch",
+      switchTime);
   cmd.Parse(argc, argv);
 
 //
@@ -103,11 +125,22 @@ main(int argc, char *argv[])
   NetDeviceContainer devices;
   devices = pointToPoint.Install(nodes);
 
-  Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(0), highRate);
-  Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(0), lowRate);
-  Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(1), highRate);
-  Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(1), lowRate);
-
+  if (Time(switchTime) == Seconds(0))
+    {
+      Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(0),
+          highRate);
+      Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(0), lowRate);
+      Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(1),
+          highRate);
+      Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(1), lowRate);
+    }
+  else
+    {
+      Simulator::Schedule(Time(switchStart), SwitchCallBack, devices.Get(0),
+          switchTime, lowRate, highRate, false);
+      Simulator::Schedule(Time(switchStart), SwitchCallBack, devices.Get(1),
+          switchTime, lowRate, highRate, false);
+    }
 //
 // Install the internet stack on the nodes
 //
