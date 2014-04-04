@@ -33,6 +33,8 @@ namespace ns3
     uint32_t m_bytes;
     DashClient *m_app;
 
+    Time m_lastmeasurement;
+
   };
 
 } // namespace ns3

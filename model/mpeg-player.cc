@@ -22,7 +22,7 @@ namespace ns3
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_protocol(
-          AAASH), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay(
+          AAASH /*FUZZY*/), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay(
           "0s")
   {
     NS_LOG_FUNCTION(this);
@@ -307,7 +307,9 @@ namespace ns3
     n1 = std::sqrt(std::pow(r2, 2) + std::pow(r4, 2));
     n2 = std::sqrt(std::pow(r1, 2));
 
-    output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)
+    /*output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)*/
+    output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 2 + p2 * 4)
+
         / (n2 + n1 + z + p1 + p2);
 
     NS_LOG_INFO(
@@ -321,13 +323,35 @@ namespace ns3
 
     uint32_t result = output * currRate;
 
-    nextRate = result > 537823 ? 537823 : result > 384159 ? 384159 :
+    std::cout << result << std::endl;
+
+    uint32_t rates[] =
+    /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
+     274399, 384159, 537823 };*/
+      { 45000, 89000, 131000, 178000, 221000, 263000, 334000, 396000, 522000,
+          595000, 791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000,
+          3527000, 3840000, 4220000 };
+
+    uint32_t rates_size = sizeof(rates) / sizeof(rates[0]);
+
+    uint32_t i;
+
+    nextRate = rates[0];
+
+    for (i = 0; i < rates_size; i++)
+      {
+        if ( result > rates[i]) {
+            nextRate = rates[i];
+        }
+      }
+
+    /*nextRate = result > 537823 ? 537823 : result > 384159 ? 384159 :
                result > 274399 ? 274399 : result > 195999 ? 195999 :
                result > 140000 ? 140000 : result > 100000 ? 100000 :
                result > 71428 ? 71428 : result > 51020 ? 51020 :
                result > 36443 ? 36443 : result > 26030 ? 26030 :
                result > 18593 ? 18593 : 13281;
-
+*/
     if (nextRate > currRate)
       {
         double incrProb = std::pow(0.8,

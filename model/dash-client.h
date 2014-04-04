@@ -138,6 +138,8 @@ namespace ns3
 
     static int m_countObjs;
     int m_id;
+    Time m_requestTime;
+    uint32_t m_segment_bytes;
   };
 
 } // namespace ns3

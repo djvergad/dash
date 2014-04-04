@@ -34,13 +34,13 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("DashExample");
 
 void
-CallBack(Ptr<NetDevice> device)
+CallBack(Ptr<NetDevice> device, std::string rate)
 {
   std::cout << "============================================\n"
-      "==================  CALLBACK ===============\n"
+      "=== CALLBACK: new rate: " << rate << " =====\n"
       "============================================" << std::endl;
 
-  device->SetAttribute("DataRate", StringValue("50Kbps"));
+  device->SetAttribute("DataRate", StringValue(rate));
 
 }
 
@@ -51,7 +51,13 @@ main(int argc, char *argv[])
   uint32_t maxBytes = 100;
   uint32_t users = 1;
   double target_dt = 7;
-  double stopTime = 100.0;
+  double stopTime = 500.0;
+  double linkHigh = 200.0;
+  double linkLow = 400.0;
+  std::string linkRate = "1000000";
+  std::string highRate = "2000000";
+  std::string lowRate = "1000000";
+  std::string delay = "5ms";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -70,29 +76,37 @@ main(int argc, char *argv[])
       target_dt);
   cmd.AddValue("stopTime",
       "The time when the clients will stop requesting segments", stopTime);
-
+  cmd.AddValue("linkRate",
+      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
+      linkRate);
+  cmd.AddValue("delay",
+      "The delay of the link connecting the clients to the server (e.g. 5ms)",
+      delay);
   cmd.Parse(argc, argv);
 
 //
 // Explicitly create the nodes required by the topology (shown above).
 //
-  NS_LOG_INFO ("Create nodes.");
+  NS_LOG_INFO("Create nodes.");
   NodeContainer nodes;
   nodes.Create(2);
 
-  NS_LOG_INFO ("Create channels.");
+  NS_LOG_INFO("Create channels.");
 
 //
 // Explicitly create the point-to-point link required by the topology (shown above).
 //
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
-  pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
+  pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
+  pointToPoint.SetChannelAttribute("Delay", StringValue(delay));
 
   NetDeviceContainer devices;
   devices = pointToPoint.Install(nodes);
-  Simulator::Schedule(Seconds(stopTime / 2), CallBack, devices.Get(0));
 
+  Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(0), highRate);
+  Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(0), lowRate);
+  Simulator::Schedule(Seconds(linkHigh), CallBack, devices.Get(1), highRate);
+  Simulator::Schedule(Seconds(linkLow), CallBack, devices.Get(1), lowRate);
 
 //
 // Install the internet stack on the nodes
@@ -103,12 +117,12 @@ main(int argc, char *argv[])
 //
 // We've got the "hardware" in place.  Now we need to add IP addresses.
 //
-  NS_LOG_INFO ("Assign IP Addresses.");
+  NS_LOG_INFO("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
   ipv4.SetBase("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign(devices);
 
-  NS_LOG_INFO ("Create Applications.");
+  NS_LOG_INFO("Create Applications.");
 
 //
 // Create a BulkSendApplication and install it on node 0
@@ -125,7 +139,7 @@ main(int argc, char *argv[])
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
-      clientApp.Start(Seconds(1.0));
+      clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
 
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
@@ -155,11 +169,11 @@ main(int argc, char *argv[])
 //
 // Now, do the actual simulation.
 //
-  NS_LOG_INFO ("Run Simulation.");
+  NS_LOG_INFO("Run Simulation.");
   /*Simulator::Stop(Seconds(100.0));*/
   Simulator::Run();
   Simulator::Destroy();
-  NS_LOG_INFO ("Done.");
+  NS_LOG_INFO("Done.");
 
   uint32_t k;
   for (k = 0; k < users; k++)

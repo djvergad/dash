@@ -67,15 +67,16 @@ namespace ns3
   DashClient::DashClient() :
       m_bitRate(45000), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_bytesRecv(0), m_lastRecv(Seconds(0)), m_sumDt(
-          Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++)
+          Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++), m_requestTime(
+          "0s"), m_segment_bytes(0)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     m_parser.SetApp(this);
   }
 
   DashClient::~DashClient()
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
   }
 
   /*
@@ -90,14 +91,14 @@ namespace ns3
   Ptr<Socket>
   DashClient::GetSocket(void) const
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     return m_socket;
   }
 
   void
   DashClient::DoDispose(void)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
 
     m_socket = 0;
     // chain up
@@ -108,7 +109,7 @@ namespace ns3
   void
   DashClient::StartApplication(void) // Called at time specified by Start
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
 
     // Create the socket if not already
 
@@ -116,6 +117,7 @@ namespace ns3
       {
 
         m_socket = Socket::CreateSocket(GetNode(), m_tid);
+        /*        m_socket = Socket::CreateSocket(GetNode(), TypeId::LookupByName ("ns3::TcpTahoe"));*/
 
         // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
         if (m_socket->GetSocketType() != Socket::NS3_SOCK_STREAM
@@ -148,7 +150,7 @@ namespace ns3
   void
   DashClient::StopApplication(void) // Called at time specified by Stop
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
 
     if (m_socket != 0)
       {
@@ -157,7 +159,7 @@ namespace ns3
       }
     else
       {
-        NS_LOG_WARN ("DashClient found null socket to close in StopApplication");
+        NS_LOG_WARN("DashClient found null socket to close in StopApplication");
       }
   }
 
@@ -166,7 +168,7 @@ namespace ns3
   void
   DashClient::RequestSegment(uint32_t bitRate)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
 
     Ptr<Packet> packet = Create<Packet>(100);
 
@@ -184,12 +186,15 @@ namespace ns3
         Simulator::Stop();
       }
 
+    m_requestTime = Simulator::Now();
+    m_segment_bytes = 0;
+
   }
 
   void
   DashClient::HandleRead(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);
+    NS_LOG_FUNCTION(this << socket);
 
     m_parser.ReadSocket(socket);
 
@@ -198,7 +203,8 @@ namespace ns3
   void
   DashClient::ConnectionSucceeded(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);NS_LOG_LOGIC ("DashClient Connection succeeded");
+    NS_LOG_FUNCTION(this << socket);
+    NS_LOG_LOGIC("DashClient Connection succeeded");
     m_connected = true;
     RequestSegment(m_bitRate);
   }
@@ -206,13 +212,14 @@ namespace ns3
   void
   DashClient::ConnectionFailed(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);NS_LOG_LOGIC ("DashClient, Connection Failed");
+    NS_LOG_FUNCTION(this << socket);NS_LOG_LOGIC(
+        "DashClient, Connection Failed");
   }
 
   void
   DashClient::DataSend(Ptr<Socket>, uint32_t)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
 
     if (m_connected)
       { // Only send new data if the connection has completed
@@ -230,7 +237,12 @@ namespace ns3
   void
   DashClient::MessageReceived(Packet message)
   {
-    NS_LOG_FUNCTION (this << message);
+    NS_LOG_FUNCTION(this << message);
+
+    MPEGHeader mpegHeader;
+    HTTPHeader httpHeader;
+    uint32_t headersize = mpegHeader.GetSerializedSize()
+        + httpHeader.GetSerializedSize();
 
     double normBitrate = 0;
     if (m_player.m_state == MPEG_PLAYER_NOT_STARTED)
@@ -241,7 +253,7 @@ namespace ns3
       {
         m_totBytes += message.GetSize();
 
-        double instBitrate = 8 * message.GetSize()
+        double instBitrate = 8 * (message.GetSize() + headersize)
             / (Simulator::Now() - m_lastRecv).GetSeconds();
 
         if (Simulator::Now() != m_lastRecv)
@@ -254,16 +266,13 @@ namespace ns3
 
         (void) normBitrate;
 
-        NS_LOG_INFO("------RECEIVED: " << message.GetSize()
-            << " Bitrate = " << (8 * m_totBytes / (Simulator::Now() - m_player.m_start_time).GetSeconds())
-            << " instBit = " << instBitrate
-            << " normBit = " << normBitrate);
+        NS_LOG_INFO(
+            "------RECEIVED: " << message.GetSize() << " Bitrate = " << (8 * m_totBytes / (Simulator::Now() - m_player.m_start_time).GetSeconds()) << " instBit = " << instBitrate << " normBit = " << normBitrate);
       }
     m_player.ReceiveFrame(&message);
+    m_segment_bytes += message.GetSize();
 
-    MPEGHeader mpegHeader;
     message.RemoveHeader(mpegHeader);
-    HTTPHeader httpHeader;
     message.RemoveHeader(httpHeader);
     switch (m_player.m_state)
       {
@@ -279,6 +288,12 @@ namespace ns3
 
     if (mpegHeader.GetFrameId() == MPEG_FRAMES_PER_SEGMENT - 1)
       {
+
+        double segmentTime = (Simulator::Now() - m_requestTime).GetSeconds();
+
+        NS_LOG_INFO(
+            Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << segmentTime << " segmentRate: " << 8 * m_segment_bytes / segmentTime);
+
         m_player.LogBufferLevel();
 
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
@@ -301,31 +316,22 @@ namespace ns3
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
-            << " estBitRate: " << m_player.GetBitRateEstimate() << " interTime: "
-            << m_player.m_interruption_time.GetSeconds() << " T: "
-            << currDt.GetSeconds() << " dT: "
+            << " estBitRate: " << m_player.GetBitRateEstimate()
+            << " interTime: " << m_player.m_interruption_time.GetSeconds()
+            << " T: " << currDt.GetSeconds() << " dT: "
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
-            << std::endl;
+            << " del: " << bufferDelay << std::endl;
 
         //if (m_lastDt >= 0) {
-        NS_LOG_INFO(" Now: " << Simulator::Now().GetSeconds()
-            << " Node: " << m_id
-            << " Curr: " << currDt.GetSeconds()
-            << " last: " << m_lastDt.GetSeconds()
-            << " Diff: " << (currDt - m_lastDt).GetSeconds()
-            << " Diff2: " << (currDt - m_lastDt).GetSeconds()
-            / (Simulator::Now() - m_lastRecv).GetSeconds()
-        );
+        NS_LOG_INFO(
+            " Now: " << Simulator::Now().GetSeconds() << " Node: " << m_id << " Curr: " << currDt.GetSeconds() << " last: " << m_lastDt.GetSeconds() << " Diff: " << (currDt - m_lastDt).GetSeconds() << " Diff2: " << (currDt - m_lastDt).GetSeconds() / (Simulator::Now() - m_lastRecv).GetSeconds());
         //}
-        NS_LOG_INFO("==== Last frame received. Requesting segment " << m_segmentId);
+        NS_LOG_INFO(
+            "==== Last frame received. Requesting segment " << m_segmentId);
 
         (void) old;
-        NS_LOG_INFO("!@#$#@!$@#\t" << Simulator::Now().GetSeconds()
-            << " old: " << old
-            << " new: " << m_bitRate
-            << " t: " << currDt.GetSeconds()
-            << " dt: " << (currDt - m_lastDt).GetSeconds()
-        );
+        NS_LOG_INFO(
+            "!@#$#@!$@#\t" << Simulator::Now().GetSeconds() << " old: " << old << " new: " << m_bitRate << " t: " << currDt.GetSeconds() << " dt: " << (currDt - m_lastDt).GetSeconds());
 
         m_lastDt = currDt;
 
