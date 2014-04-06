@@ -39,10 +39,11 @@ main(int argc, char *argv[])
   bool tracing = false;
   uint32_t maxBytes = 100;
   uint32_t users = 1;
-  double target_dt = 0.000005;
+  double target_dt = 35.0;
   double stopTime = 100.0;
   std::string linkRate = "500Kbps";
   std::string delay = "5ms";
+  std::string protocol = "AAASH";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -65,18 +66,20 @@ main(int argc, char *argv[])
       "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
       linkRate);
   cmd.AddValue("delay",
-        "The delay of the link connecting the clients to the server (e.g. 5ms)",
-        delay);
+      "The delay of the link connecting the clients to the server (e.g. 5ms)",
+      delay);
+  cmd.AddValue("protocol",
+      "The adaptation protocol. It can be AAASH or FUZZY (for now)", protocol);
   cmd.Parse(argc, argv);
 
 //
 // Explicitly create the nodes required by the topology (shown above).
 //
-  NS_LOG_INFO ("Create nodes.");
+  NS_LOG_INFO("Create nodes.");
   NodeContainer nodes;
   nodes.Create(2);
 
-  NS_LOG_INFO ("Create channels.");
+  NS_LOG_INFO("Create channels.");
 
 //
 // Explicitly create the point-to-point link required by the topology (shown above).
@@ -96,12 +99,12 @@ main(int argc, char *argv[])
 //
 // We've got the "hardware" in place.  Now we need to add IP addresses.
 //
-  NS_LOG_INFO ("Assign IP Addresses.");
+  NS_LOG_INFO("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
   ipv4.SetBase("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign(devices);
 
-  NS_LOG_INFO ("Create Applications.");
+  NS_LOG_INFO("Create Applications.");
 
 //
 // Create a BulkSendApplication and install it on node 0
@@ -123,6 +126,20 @@ main(int argc, char *argv[])
 
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
       app->SetPlayerTargetTime(Seconds(target_dt));
+
+      if (protocol == "AAASH")
+        {
+          app->GetPlayer().SetProtocol(AAASH);
+        }
+      else if (protocol == "FUZZY")
+        {
+          app->GetPlayer().SetProtocol(FUZZY);
+        }
+      else
+        {
+          std::cerr << "Wrong Protocol!" << std::endl;
+          return -1;
+        }
 
       clients.push_back(client);
       clientApps.push_back(clientApp);
@@ -148,11 +165,11 @@ main(int argc, char *argv[])
 //
 // Now, do the actual simulation.
 //
-  NS_LOG_INFO ("Run Simulation.");
+  NS_LOG_INFO("Run Simulation.");
   /*Simulator::Stop(Seconds(100.0));*/
   Simulator::Run();
   Simulator::Destroy();
-  NS_LOG_INFO ("Done.");
+  NS_LOG_INFO("Done.");
 
   uint32_t k;
   for (k = 0; k < users; k++)
@@ -161,5 +178,7 @@ main(int argc, char *argv[])
       std::cout << "Node: " << k;
       app->GetStats();
     }
+
+  return 0;
 
 }

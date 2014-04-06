@@ -256,13 +256,13 @@ namespace ns3
         double instBitrate = 8 * (message.GetSize() + headersize)
             / (Simulator::Now() - m_lastRecv).GetSeconds();
 
-/*
-        if (Simulator::Now() != m_lastRecv)
-          {
+        /*
+         if (Simulator::Now() != m_lastRecv)
+         {
 
-            m_player.AddBitRate(Simulator::Now(), instBitrate);
-          }
-*/
+         m_player.AddBitRate(Simulator::Now(), instBitrate);
+         }
+         */
 
         normBitrate = 0.1 * instBitrate + 0.9 * m_bitRate;
 
@@ -293,12 +293,11 @@ namespace ns3
 
         double segmentTime = (Simulator::Now() - m_requestTime).GetSeconds();
 
-        std::cout << Simulator::Now().GetSeconds() << " bytes: "
-            << m_segment_bytes << " segmentTime: " << segmentTime
-            << " segmentRate: " << 8 * m_segment_bytes / segmentTime
-            << std::endl;
+        NS_LOG_INFO(
+            Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << segmentTime << " segmentRate: " << 8 * m_segment_bytes / segmentTime);
 
-        m_player.AddBitRate(Simulator::Now(), 8 * m_segment_bytes / segmentTime);
+        m_player.AddBitRate(Simulator::Now(),
+            8 * m_segment_bytes / segmentTime);
 
         m_player.LogBufferLevel();
 

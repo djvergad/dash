@@ -94,6 +94,12 @@ namespace ns3
     RequestSegment(uint32_t bitRate);
     uint32_t m_bitRate;
 
+    inline MpegPlayer &
+    GetPlayer()
+    {
+      return m_player;
+    }
+
   protected:
     virtual void
     DoDispose(void);

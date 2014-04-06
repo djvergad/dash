@@ -323,8 +323,6 @@ namespace ns3
 
     uint32_t result = output * currRate;
 
-    std::cout << result << std::endl;
-
     uint32_t rates[] =
     /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
      274399, 384159, 537823 };*/

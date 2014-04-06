@@ -67,10 +67,17 @@ namespace ns3
     }
 
     void inline
-    SchduleBufferWakeup(const Time t, DashClient  * client)
+    SchduleBufferWakeup(const Time t, DashClient * client)
     {
       m_bufferDelay = t;
       m_dashClient = client;
+
+    }
+
+    void inline
+    SetProtocol(Protocol protocol)
+    {
+      m_protocol = protocol;
 
     }
 

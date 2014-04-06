@@ -67,7 +67,7 @@ main(int argc, char *argv[])
   bool tracing = false;
   uint32_t maxBytes = 100;
   uint32_t users = 1;
-  double target_dt = 7;
+  double target_dt = 35.0;
   double stopTime = 500.0;
   double linkHigh = 200.0;
   double linkLow = 400.0;
@@ -77,6 +77,7 @@ main(int argc, char *argv[])
   std::string delay = "5ms";
   std::string switchTime = "0s";
   std::string switchStart = "190s";
+  std::string protocol = "AAASH";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -104,6 +105,8 @@ main(int argc, char *argv[])
   cmd.AddValue("switchTime",
       "The time spent on each state (HIGH or LOW). 0 for no switch",
       switchTime);
+  cmd.AddValue("protocol",
+      "The adaptation protocol. It can be AAASH or FUZZY (for now)", protocol);
   cmd.Parse(argc, argv);
 
 //
@@ -177,6 +180,19 @@ main(int argc, char *argv[])
 
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
       app->SetPlayerTargetTime(Seconds(target_dt));
+      if (protocol == "AAASH")
+        {
+          app->GetPlayer().SetProtocol(AAASH);
+        }
+      else if (protocol == "FUZZY")
+        {
+          app->GetPlayer().SetProtocol(FUZZY);
+        }
+      else
+        {
+          std::cerr << "Wrong Protocol!" << std::endl;
+          return -1;
+        }
 
       clients.push_back(client);
       clientApps.push_back(clientApp);

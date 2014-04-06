@@ -7,7 +7,7 @@
 #     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
 
 def build(bld):
-    module = bld.create_ns3_module('dash', ['core', 'applications','point-to-point'])
+    module = bld.create_ns3_module('dash', ['core', 'applications','point-to-point','wifi','netanim'])
     module.source = [
          'model/dash-client.cc',
          'model/http-parser.cc',
