@@ -168,7 +168,7 @@ main(int argc, char *argv[])
    clientApps.Start(Seconds(1.5));
    clientApps.Stop(Seconds(9.5));*/
 
-  Simulator::Stop(Seconds(14.0));
+  Simulator::Stop(Seconds(stopTime));
   AnimationInterface anim("dash-wifi.xml");
   Simulator::Run();
   Simulator::Destroy();
