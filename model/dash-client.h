@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2010 Georgia Institute of Technology
+ * Copyright (c) 2014 TEI of Western Macedonia, Greece
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: George F. Riley <riley@ece.gatech.edu>
+ * Author: Dimitrios J. Vergados <djvergad@gmail.com>
  */
 
 #ifndef DASH_CLIENT_H
@@ -30,7 +30,6 @@
 
 namespace ns3
 {
-
 
   /**
    * \ingroup applications
@@ -110,8 +109,6 @@ namespace ns3
     StartApplication(void);    // Called at time specified by Start
     virtual void
     StopApplication(void);     // Called at time specified by Stop
-
-
 
     Ptr<Socket> m_socket;       // Associated socket
     Address m_peer;         // Peer address

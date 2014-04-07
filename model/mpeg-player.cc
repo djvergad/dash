@@ -1,8 +1,21 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * mpeg-player.cc
+ * Copyright (c) 2014 TEI of Western Macedonia, Greece
  *
- *  Created on: Jan 29, 2014
- *      Author: dimitriv
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Dimitrios J. Vergados <djvergad@gmail.com>
  */
 
 #include "ns3/log.h"
@@ -43,11 +56,7 @@ namespace ns3
   MpegPlayer::GetRealPlayTime(Time playTime)
   {
     NS_LOG_INFO(
-        " Start: " << m_start_time.GetSeconds() << " Inter: "
-        << m_interruption_time.GetSeconds() << " playtime: "
-        << playTime.GetSeconds() << " now: "
-        << Simulator::Now().GetSeconds() << " actual: "
-        << (m_start_time + m_interruption_time + playTime).GetSeconds());
+        " Start: " << m_start_time.GetSeconds() << " Inter: " << m_interruption_time.GetSeconds() << " playtime: " << playTime.GetSeconds() << " now: " << Simulator::Now().GetSeconds() << " actual: " << (m_start_time + m_interruption_time + playTime).GetSeconds());
 
     return m_start_time + m_interruption_time
         + (m_state == MPEG_PLAYER_PAUSED ?
@@ -222,9 +231,8 @@ namespace ns3
               }
 
           }
-      }NS_LOG_INFO ("nextRate: " << nextRate << "\tb_delay: "
-        << b_delay.GetSeconds() << "\tb_t: " << b_t.GetSeconds() << "\tb_opt: "
-        << b_opt.GetSeconds());
+      }NS_LOG_INFO(
+        "nextRate: " << nextRate << "\tb_delay: " << b_delay.GetSeconds() << "\tb_t: " << b_t.GetSeconds() << "\tb_opt: " << b_opt.GetSeconds());
 
   }
 
@@ -310,16 +318,10 @@ namespace ns3
     /*output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)*/
     output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 2 + p2 * 4)
 
-        / (n2 + n1 + z + p1 + p2);
+    / (n2 + n1 + z + p1 + p2);
 
     NS_LOG_INFO(
-        "currDt: " << currDt << " diff: " << diff << " slow: " << slow
-        << " ok: " << ok << " fast: " << fast << " falling: " << falling
-        << " steady: " << steady << " rising: " << rising << " r1: " << r1
-        << " r2: " << r2 << " r3: " << r3 << " r4: " << r4 << " r5: " << r5
-        << " r6: " << r6 << " r7: " << r7 << " r8: " << r8 << " r9: " << r9
-        << " p2: " << p2 << " p1: " << p1 << " z: " << z << " n1: " << n1
-        << " n2: " << n2 << " output: " << output);
+        "currDt: " << currDt << " diff: " << diff << " slow: " << slow << " ok: " << ok << " fast: " << fast << " falling: " << falling << " steady: " << steady << " rising: " << rising << " r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " r4: " << r4 << " r5: " << r5 << " r6: " << r6 << " r7: " << r7 << " r8: " << r8 << " r9: " << r9 << " p2: " << p2 << " p1: " << p1 << " z: " << z << " n1: " << n1 << " n2: " << n2 << " output: " << output);
 
     uint32_t result = output * currRate;
 
@@ -338,18 +340,19 @@ namespace ns3
 
     for (i = 0; i < rates_size; i++)
       {
-        if ( result > rates[i]) {
+        if (result > rates[i])
+          {
             nextRate = rates[i];
-        }
+          }
       }
 
     /*nextRate = result > 537823 ? 537823 : result > 384159 ? 384159 :
-               result > 274399 ? 274399 : result > 195999 ? 195999 :
-               result > 140000 ? 140000 : result > 100000 ? 100000 :
-               result > 71428 ? 71428 : result > 51020 ? 51020 :
-               result > 36443 ? 36443 : result > 26030 ? 26030 :
-               result > 18593 ? 18593 : 13281;
-*/
+     result > 274399 ? 274399 : result > 195999 ? 195999 :
+     result > 140000 ? 140000 : result > 100000 ? 100000 :
+     result > 71428 ? 71428 : result > 51020 ? 51020 :
+     result > 36443 ? 36443 : result > 26030 ? 26030 :
+     result > 18593 ? 18593 : 13281;
+     */
     if (nextRate > currRate)
       {
         double incrProb = std::pow(0.8,
@@ -484,15 +487,7 @@ namespace ns3
       }
 
     NS_LOG_INFO(
-        Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: "
-        << http_header.GetVideoId() << " SegId: "
-        << http_header.GetSegmentId() << " Res: "
-        << http_header.GetResolution() << " FrameId: "
-        << mpeg_header.GetFrameId() << " PlayTime: "
-        << mpeg_header.GetPlaybackTime().GetSeconds() << " Type: "
-        << (char) mpeg_header.GetType() << " interTime: "
-        << m_interruption_time.GetSeconds() << " queueLength: "
-        << m_queue.size());
+        Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: " << http_header.GetVideoId() << " SegId: " << http_header.GetSegmentId() << " Res: " << http_header.GetResolution() << " FrameId: " << mpeg_header.GetFrameId() << " PlayTime: " << mpeg_header.GetPlaybackTime().GetSeconds() << " Type: " << (char) mpeg_header.GetType() << " interTime: " << m_interruption_time.GetSeconds() << " queueLength: " << m_queue.size());
 
     /*   std::cout << " frId: " << mpeg_header.GetFrameId()
      << " playtime: " << mpeg_header.GetPlaybackTime()

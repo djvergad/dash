@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright 2007 University of Washington
- * 
+ * Copyright (c) 2014 TEI of Western Macedonia, Greece
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -15,8 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author:  Tom Henderson (tomhend@u.washington.edu)
+ * Author: Dimitrios J. Vergados <djvergad@gmail.com>
  */
+
 #include "ns3/address.h"
 #include "ns3/address-utils.h"
 #include "ns3/log.h"
@@ -59,34 +60,34 @@ namespace ns3
 
   DashServer::DashServer()
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     m_socket = 0;
     m_totalRx = 0;
   }
 
   DashServer::~DashServer()
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
   }
 
   Ptr<Socket>
   DashServer::GetListeningSocket(void) const
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     return m_socket;
   }
 
   std::list<Ptr<Socket> >
   DashServer::GetAcceptedSockets(void) const
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     return m_socketList;
   }
 
   void
   DashServer::DoDispose(void)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     m_socket = 0;
     m_socketList.clear();
 
@@ -98,7 +99,7 @@ namespace ns3
   void
   DashServer::StartApplication()    // Called at time specified by Start
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     // Create the socket if not already
     if (!m_socket)
       {
@@ -134,7 +135,7 @@ namespace ns3
   void
   DashServer::StopApplication()     // Called at time specified by Stop
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     while (!m_socketList.empty()) //these are accepted sockets, close them
       {
         Ptr<Socket> acceptedSocket = m_socketList.front();
@@ -151,7 +152,7 @@ namespace ns3
   void
   DashServer::HandleRead(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);
+    NS_LOG_FUNCTION(this << socket);
     Ptr<Packet> packet;
     Address from;
     while ((packet = socket->RecvFrom(from)))
@@ -170,21 +171,13 @@ namespace ns3
 
         if (InetSocketAddress::IsMatchingType(from))
           {
-            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
-                << "s packet sink received "
-                << packet->GetSize () << " bytes from "
-                << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
-                << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
-                << " total Rx " << m_totalRx << " bytes");
+            NS_LOG_INFO(
+                "At time " << Simulator::Now ().GetSeconds () << "s packet sink received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom(from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort () << " total Rx " << m_totalRx << " bytes");
           }
         else if (Inet6SocketAddress::IsMatchingType(from))
           {
-            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
-                << "s packet sink received "
-                << packet->GetSize () << " bytes from "
-                << Inet6SocketAddress::ConvertFrom(from).GetIpv6 ()
-                << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
-                << " total Rx " << m_totalRx << " bytes");
+            NS_LOG_INFO(
+                "At time " << Simulator::Now ().GetSeconds () << "s packet sink received " << packet->GetSize () << " bytes from " << Inet6SocketAddress::ConvertFrom(from).GetIpv6 () << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort () << " total Rx " << m_totalRx << " bytes");
           }
         m_rxTrace(packet, from);
       }
@@ -193,19 +186,19 @@ namespace ns3
   void
   DashServer::HandlePeerClose(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);
+    NS_LOG_FUNCTION(this << socket);
   }
 
   void
   DashServer::HandlePeerError(Ptr<Socket> socket)
   {
-    NS_LOG_FUNCTION (this << socket);
+    NS_LOG_FUNCTION(this << socket);
   }
 
   void
   DashServer::HandleAccept(Ptr<Socket> s, const Address& from)
   {
-    NS_LOG_FUNCTION (this << s << from);
+    NS_LOG_FUNCTION(this << s << from);
     s->SetRecvCallback(MakeCallback(&DashServer::HandleRead, this));
     s->SetSendCallback(MakeCallback(&DashServer::DataSend, this));
     m_socketList.push_back(s);
@@ -215,7 +208,7 @@ namespace ns3
   void
   DashServer::DataSend(Ptr<Socket> socket, uint32_t)
   {
-    NS_LOG_FUNCTION (this);
+    NS_LOG_FUNCTION(this);
     for (std::map<Ptr<Socket>, std::queue<Packet> >::iterator iter =
         m_queues.begin(); iter != m_queues.end(); ++iter)
       {
@@ -229,11 +222,8 @@ namespace ns3
             frame->RemoveHeader(mpegHeader);
             frame->RemoveHeader(httpHeader);
 
-            NS_LOG_INFO ( "VidId: " << httpHeader.GetVideoId()
-                << " rxAv= " << iter->first->GetRxAvailable()
-                << " queue= "<< iter->second.size()
-                << " res= " << httpHeader.GetResolution()
-            );
+            NS_LOG_INFO(
+                "VidId: " << httpHeader.GetVideoId() << " rxAv= " << iter->first->GetRxAvailable() << " queue= "<< iter->second.size() << " res= " << httpHeader.GetResolution());
           }
       }
 
@@ -289,18 +279,17 @@ namespace ns3
         MPEGHeader mpeg_header;
         mpeg_header.SetFrameId(f_id);
         mpeg_header.SetPlaybackTime(
-            MilliSeconds((f_id + (segment_id * MPEG_FRAMES_PER_SEGMENT)) * TIME_BETWEEN_FRAMES)); //50 fps
+            MilliSeconds(
+                (f_id + (segment_id * MPEG_FRAMES_PER_SEGMENT))
+                    * TIME_BETWEEN_FRAMES)); //50 fps
         mpeg_header.SetType('B');
         mpeg_header.SetSize(frame_size);
 
         Ptr<Packet> frame = Create<Packet>(frame_size);
         frame->AddHeader(http_header);
         frame->AddHeader(mpeg_header);
-        NS_LOG_INFO("SENDING PACKET " << f_id
-            << " " << frame->GetSize()
-            << " res=" << http_header.GetResolution()
-            << " size=" << mpeg_header.GetSize()
-            << " avg=" << avg_packetsize);
+        NS_LOG_INFO(
+            "SENDING PACKET " << f_id << " " << frame->GetSize() << " res=" << http_header.GetResolution() << " size=" << mpeg_header.GetSize() << " avg=" << avg_packetsize);
 
         m_queues[socket].push(*frame);
       }
