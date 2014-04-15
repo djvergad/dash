@@ -70,7 +70,8 @@ main(int argc, char *argv[])
       "The delay of the link connecting the clients to the server (e.g. 5ms)",
       delay);
   cmd.AddValue("protocol",
-      "The adaptation protocol. It can be AAASH or FUZZY (for now)", protocol);
+      "The adaptation protocol. It can be AAASH, FUZZY, or FUZZYv2 (for now).",
+      protocol);
   cmd.Parse(argc, argv);
 
   if (bulkNo + users > nWifi + 1)
@@ -138,6 +139,10 @@ main(int argc, char *argv[])
       else if (protocol == "FUZZY")
         {
           app->GetPlayer().SetProtocol(FUZZY);
+        }
+      else if (protocol == "FUZZYv2")
+        {
+          app->GetPlayer().SetProtocol(FUZZYv2);
         }
       else
         {

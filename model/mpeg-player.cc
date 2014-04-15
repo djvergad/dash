@@ -64,39 +64,14 @@ namespace ns3
         - Simulator::Now();
   }
 
-  /*uint32_t
-   MpegPlayer::CalcSendRate(uint32_t recvRate, Time dt1)
-   {
-   Time target = m_target_dt;
-
-   if (dt1 > 2 * m_target_dt) {
-   target =  Seconds(dt1.GetSeconds() / 2);
-   }
-
-   double factor = (1-(target - dt1).GetSeconds()/(MPEG_FRAMES_PER_SEGMENT * 0.020));
-
-   if (factor > 1) {
-   factor /= 2;
-   }
-
-   if (factor < 0) {
-   factor = 0.0001;
-   }
-
-   return factor * recvRate / 2;
-
-   std::cout << recvRate << " " << dt1.GetSeconds() << " " << factor << " " << factor * recvRate << std::endl;
-   return factor * recvRate > 500000? 500000 : factor *recvRate  ;
-
-   }*/
-
   void
   MpegPlayer::CalcNextSegment(uint32_t currRate, double currDt, double diff,
       uint32_t & nextRate, Time & b_delay)
   {
     switch (m_protocol)
       {
-    case FUZZY:
+    case FUZZY: // There is another check
+    case FUZZYv2: // inside CalcFuzzy to differentiate.
       CalcFuzzy(currRate, currDt, diff, nextRate, b_delay);
       break;
     case AAASH:
@@ -317,13 +292,25 @@ namespace ns3
 
     /*output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)*/
     output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 2 + p2 * 4)
-
-    / (n2 + n1 + z + p1 + p2);
+        / (n2 + n1 + z + p1 + p2);
 
     NS_LOG_INFO(
         "currDt: " << currDt << " diff: " << diff << " slow: " << slow << " ok: " << ok << " fast: " << fast << " falling: " << falling << " steady: " << steady << " rising: " << rising << " r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " r4: " << r4 << " r5: " << r5 << " r6: " << r6 << " r7: " << r7 << " r8: " << r8 << " r9: " << r9 << " p2: " << p2 << " p1: " << p1 << " z: " << z << " n1: " << n1 << " n2: " << n2 << " output: " << output);
 
-    uint32_t result = output * currRate;
+    uint32_t result = 0;
+
+    switch (m_protocol) {
+    case FUZZY :
+      result = output * currRate;
+      break;
+    case FUZZYv2:
+      result = output * m_bitrateEstimate;
+      break;
+    default:
+      NS_LOG_ERROR("Wrong Protocol");
+      Simulator::Stop();
+    }
+
 
     uint32_t rates[] =
     /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,

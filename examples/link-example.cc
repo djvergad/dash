@@ -110,7 +110,8 @@ main(int argc, char *argv[])
       "The time spent on each state (HIGH or LOW). 0 for no switch",
       switchTime);
   cmd.AddValue("protocol",
-      "The adaptation protocol. It can be AAASH or FUZZY (for now)", protocol);
+      "The adaptation protocol. It can be AAASH, FUZZY, or FUZZYv2 (for now).",
+      protocol);
   cmd.Parse(argc, argv);
 
 //
@@ -191,6 +192,10 @@ main(int argc, char *argv[])
       else if (protocol == "FUZZY")
         {
           app->GetPlayer().SetProtocol(FUZZY);
+        }
+      else if (protocol == "FUZZYv2")
+        {
+          app->GetPlayer().SetProtocol(FUZZYv2);
         }
       else
         {
