@@ -103,7 +103,7 @@ namespace ns3
     uint32_t m_minRate;
     uint32_t m_framesPlayed;
     Time m_target_dt;
-    Protocol m_protocol;
+
 
   private:
     void
@@ -128,6 +128,7 @@ namespace ns3
     std::list<Time> m_bufferState;
     Time m_bufferDelay;
     DashClient * m_dashClient;
+    Protocol m_protocol;
 
   };
 } // namespace ns3

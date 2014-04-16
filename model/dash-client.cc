@@ -363,10 +363,4 @@ namespace ns3
     m_player.m_target_dt = time;
   }
 
-  void
-  DashClient::SetProtocol(Protocol protocol)
-  {
-    m_player.m_protocol = protocol;
-  }
-
 } // Namespace ns3

@@ -84,9 +84,6 @@ namespace ns3
     void
     SetPlayerTargetTime(Time time);
 
-    void
-    SetProtocol(Protocol protocol);
-
     MpegPlayer m_player;
 
     void

@@ -34,9 +34,9 @@ namespace ns3
 
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_protocol(
-          AAASH /*FUZZY*/), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay(
-          "0s")
+          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
+          0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
+          AAASH /*FUZZY*/)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -299,8 +299,9 @@ namespace ns3
 
     uint32_t result = 0;
 
-    switch (m_protocol) {
-    case FUZZY :
+    switch (m_protocol)
+      {
+    case FUZZY:
       result = output * currRate;
       break;
     case FUZZYv2:
@@ -309,8 +310,7 @@ namespace ns3
     default:
       NS_LOG_ERROR("Wrong Protocol");
       Simulator::Stop();
-    }
-
+      }
 
     uint32_t rates[] =
     /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
