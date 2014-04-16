@@ -32,7 +32,7 @@ namespace ns3
 {
 
   /**
-   * \ingroup applications
+   * \ingroup Dash
    * \defgroup http DashClient
    *
    * This traffic generator simply sends data

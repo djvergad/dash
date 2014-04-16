@@ -94,6 +94,12 @@ namespace ns3
 
     }
 
+    void inline
+    SetWindow(Time time)
+    {
+      m_window = time;
+    }
+
     int m_state;
     Time m_interruption_time;
     int m_interrruptions;
@@ -129,6 +135,7 @@ namespace ns3
     Time m_bufferDelay;
     DashClient * m_dashClient;
     Protocol m_protocol;
+    Time m_window;
 
   };
 } // namespace ns3

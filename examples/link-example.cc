@@ -82,6 +82,7 @@ main(int argc, char *argv[])
   std::string switchTime = "0s";
   std::string switchStart = "190s";
   std::string protocol = "AAASH";
+  std::string window = "10s";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
@@ -112,6 +113,8 @@ main(int argc, char *argv[])
   cmd.AddValue("protocol",
       "The adaptation protocol. It can be AAASH, FUZZY, or FUZZYv2 (for now).",
       protocol);
+  cmd.AddValue("window",
+      "The window for measuring the average throughput (Time).", window);
   cmd.Parse(argc, argv);
 
 //
@@ -185,6 +188,8 @@ main(int argc, char *argv[])
 
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
       app->SetPlayerTargetTime(Seconds(target_dt));
+      app->GetPlayer().SetWindow(Time(window));
+
       if (protocol == "AAASH")
         {
           app->GetPlayer().SetProtocol(AAASH);

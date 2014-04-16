@@ -36,7 +36,7 @@ namespace ns3
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
           0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
-          AAASH /*FUZZY*/)
+          AAASH /*FUZZY*/),m_window(Seconds(10))
   {
     NS_LOG_FUNCTION(this);
   }
@@ -379,7 +379,7 @@ namespace ns3
     for (std::map<Time, double>::iterator it = m_bitrates.begin();
         it != m_bitrates.end(); ++it)
       {
-        if (it->first < (Simulator::Now() - Seconds(10)))
+        if (it->first < (Simulator::Now() - m_window))
           {
             m_bitrates.erase(it->first);
           }
