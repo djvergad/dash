@@ -78,7 +78,7 @@ namespace ns3
       }
 
     NS_LOG_INFO(
-        "### Buffer space: " << m_bytes << " Queue length " << m_app->m_player.GetQueueSize());
+        "### Buffer space: " << m_bytes << " Queue length " << m_app->GetPlayer().GetQueueSize());
 
     if (m_bytes < headersize)
       {

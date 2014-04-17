@@ -32,22 +32,34 @@ namespace ns3
 {
 
   /**
-   * \ingroup Dash
-   * \defgroup http DashClient
+   * \defgroup dash Dash
+   * This section documents the API of the ns-3 dash module. For a generic functional
+   * description, please refer to the ns-3 manual.
+   */
+
+  /**
+   * \ingroup dash
    *
-   * This traffic generator simply sends data
-   * as fast as possible up to MaxBytes or until
-   * the appplication is stopped if MaxBytes is
-   * zero. Once the lower layer send buffer is
-   * filled, it waits until space is free to
-   * send more data, essentially keeping a
-   * constant flow of data. Only SOCK_STREAM
-   * and SOCK_SEQPACKET sockets are supported.
-   * For example, TCP sockets can be used, but
-   * UDP sockets can not be used.
+   * \brief This is the DASH client application, that is
+   * used for transmitting and receiving http DASH
+   * messages with a DASH server.
+   *
+   * The client requests one segment at a time. When it
+   * receives each tcp segment, it uses a HttpParser object
+   * to decode the HTTP messages into MPEG frames.
+   *
+   * These MPEG frames are then passed on to the MpegPlayer object
+   * that buffers and reproduces the frames.
+   *
+   * When an entire segment has been received, then the next segment's
+   * bitrate (resolution) and request time are calculated my the MpegPlayer
+   * depending on the buffer level, and the current measured throughput.
+   *
    */
   class DashClient : public Application
   {
+    friend class MpegPlayer;
+    friend class HttpParser;
   public:
     static TypeId
     GetTypeId(void);
@@ -57,39 +69,29 @@ namespace ns3
     virtual
     ~DashClient();
 
-    /*  *
-     * \param maxBytes the upper bound of bytes to send
-     *
-     * Set the upper bound for the total number of bytes to send. Once
-     * this bound is reached, no more application bytes are sent. If the
-     * application is stopped during the simulation and restarted, the
-     * total number of bytes sent is not reset; however, the maxBytes
-     * bound is still effective and the application will continue sending
-     * up to maxBytes. The value zero for maxBytes means that
-     * there is no upper bound; i.e. data is sent until the application
-     * or simulation is stopped.
-
-     void SetMaxBytes (uint32_t maxBytes);*/
-
     /**
      * \return pointer to associated socket
      */
     Ptr<Socket>
     GetSocket(void) const;
 
-    void
-    MessageReceived(Packet message);
+    /**
+     * \brief Prints some statistics.
+     */
     void
     GetStats();
+
+    /*
+     * \brief Sets the target buffering time for the player.
+     */
     void
     SetPlayerTargetTime(Time time);
 
-    MpegPlayer m_player;
-
-    void
-    RequestSegment(uint32_t bitRate);
-    uint32_t m_bitRate;
-
+    /**
+     * \return The MpegPlayer object that is used for buffering and
+     * reproducing the video, and for estimating the next bitrate (resolution)
+     * and request time.
+     */
     inline MpegPlayer &
     GetPlayer()
     {
@@ -101,45 +103,57 @@ namespace ns3
     DoDispose(void);
 
   private:
+
+    /**
+     * \brief Called the next MPEG segment should be requested from the server.
+     *
+     * \param The bitrate of the next segment.
+     */
+    void
+    RequestSegment();
+
+    /**
+     * \brief Called by the HttpParser when it has received a complete HTTP
+     * message containing an MPEG frame.
+     *
+     * \param the message that was received
+     */
+    void
+    MessageReceived(Packet message);
+
     // inherited from Application base class.
     virtual void
     StartApplication(void);    // Called at time specified by Start
     virtual void
     StopApplication(void);     // Called at time specified by Stop
+    void
+    ConnectionSucceeded(Ptr<Socket> socket); // Called when the connections has succeeded
+    void
+    ConnectionFailed(Ptr<Socket> socket); // Called when the connection has failed.
+    void
+    DataSend(Ptr<Socket>, uint32_t); // Called when the data has been transmitted
+    void
+    HandleRead(Ptr<Socket>); // Called when we receive data from the server
 
-    Ptr<Socket> m_socket;       // Associated socket
-    Address m_peer;         // Peer address
-    bool m_connected;    // True if connected
-    uint32_t m_sendSize;     // Size of data to send each time
-    uint32_t m_maxBytes;     // Limit total number of bytes sent
-    uint32_t m_totBytes;     // Total bytes sent so far
+    MpegPlayer m_player;     // The MpegPlayer object
+    HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
+    Ptr<Socket> m_socket;    // Associated socket
+    Address m_peer;          // Peer address
+    bool m_connected;        // True if connected
+    uint32_t m_totBytes;     // Total bytes received.
+
     TypeId m_tid;
     TracedCallback<Ptr<const Packet> > m_txTrace;
-    HttpParser m_parser;
-    uint32_t m_videoId;
-    uint32_t m_segmentId;
-    Time m_startedReceiving;
-    uint32_t m_bytesRecv;
-    Time m_lastRecv;
-    Time m_sumDt;
-    Time m_lastDt;
-
-  private:
-    void
-    ConnectionSucceeded(Ptr<Socket> socket);
-    void
-    ConnectionFailed(Ptr<Socket> socket);
-    void
-    DataSend(Ptr<Socket>, uint32_t); // for socket's SetSendCallback
-    void
-    Ignore(Ptr<Socket> socket);
-    void
-    HandleRead(Ptr<Socket>);
-
-    static int m_countObjs;
+    uint32_t m_videoId;      // The Id of the video that is requested
+    uint32_t m_segmentId;    // The id of the current segment
+    Time m_startedReceiving; // Time of reception of the first MPEG frame
+    Time m_sumDt;            // Used for calculating the average buffering time
+    Time m_lastDt; // The previous buffering time (used for calculating the differential
+    static int m_countObjs; // Number of DashClient instances (for generating unique id
     int m_id;
-    Time m_requestTime;
-    uint32_t m_segment_bytes;
+    Time m_requestTime;      // Time of sending the last request
+    uint32_t m_segment_bytes; // Bytes of the current segment that have been received so far
+    uint32_t m_bitRate;      // The bitrate of the current segment.
   };
 
 } // namespace ns3

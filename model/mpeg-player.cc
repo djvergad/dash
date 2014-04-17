@@ -468,7 +468,7 @@ namespace ns3
 
     if (m_bufferDelay > Time("0s") && b_t < m_bufferDelay && m_dashClient)
       {
-        m_dashClient->RequestSegment(m_dashClient->m_bitRate);
+        m_dashClient->RequestSegment();
         m_bufferDelay = Seconds(0);
         m_dashClient = NULL;
       }

@@ -41,22 +41,13 @@ namespace ns3
   {
     static TypeId tid =
         TypeId("ns3::DashClient").SetParent<Application>().AddConstructor<
-            DashClient>().AddAttribute("SendSize",
-            "The amount of data to send each time.", UintegerValue(512),
-            MakeUintegerAccessor(&DashClient::m_sendSize),
-            MakeUintegerChecker<uint32_t>(1)).AddAttribute("VideoId",
+            DashClient>().AddAttribute("VideoId",
             "The Id of the video that is played.", UintegerValue(0),
             MakeUintegerAccessor(&DashClient::m_videoId),
             MakeUintegerChecker<uint32_t>(1)).AddAttribute("Remote",
             "The address of the destination", AddressValue(),
             MakeAddressAccessor(&DashClient::m_peer), MakeAddressChecker()).AddAttribute(
-            "MaxBytes", "The total number of bytes to send. "
-                "Once these bytes are sent, "
-                "no data  is sent again. The value zero means "
-                "that there is no limit.", UintegerValue(0),
-            MakeUintegerAccessor(&DashClient::m_maxBytes),
-            MakeUintegerChecker<uint32_t>()).AddAttribute("Protocol",
-            "The type of protocol to use.",
+            "Protocol", "The type of protocol to use.",
             TypeIdValue(TcpSocketFactory::GetTypeId()),
             MakeTypeIdAccessor(&DashClient::m_tid), MakeTypeIdChecker()).AddTraceSource(
             "Tx", "A new packet is created and is sent",
@@ -65,28 +56,19 @@ namespace ns3
   }
 
   DashClient::DashClient() :
-      m_bitRate(45000), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
-          Seconds(0)), m_bytesRecv(0), m_lastRecv(Seconds(0)), m_sumDt(
-          Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++), m_requestTime(
-          "0s"), m_segment_bytes(0)
+      m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
+          Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
+          m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
+          45000)
   {
     NS_LOG_FUNCTION(this);
-    m_parser.SetApp(this);
+    m_parser.SetApp(this); // So the parser knows where to send the received messages
   }
 
   DashClient::~DashClient()
   {
     NS_LOG_FUNCTION(this);
   }
-
-  /*
-   void
-   DashClient::SetMaxBytes (uint32_t maxBytes)
-   {
-   NS_LOG_FUNCTION (this << maxBytes);
-   m_maxBytes = maxBytes;
-   }
-   */
 
   Ptr<Socket>
   DashClient::GetSocket(void) const
@@ -117,7 +99,6 @@ namespace ns3
       {
 
         m_socket = Socket::CreateSocket(GetNode(), m_tid);
-        /*        m_socket = Socket::CreateSocket(GetNode(), TypeId::LookupByName ("ns3::TcpTahoe"));*/
 
         // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
         if (m_socket->GetSocketType() != Socket::NS3_SOCK_STREAM
@@ -138,7 +119,6 @@ namespace ns3
           }
 
         m_socket->Connect(m_peer);
-//      m_socket->ShutdownRecv ();
         m_socket->SetRecvCallback(MakeCallback(&DashClient::HandleRead, this));
         m_socket->SetConnectCallback(
             MakeCallback(&DashClient::ConnectionSucceeded, this),
@@ -166,7 +146,7 @@ namespace ns3
 // Private helpers
 
   void
-  DashClient::RequestSegment(uint32_t bitRate)
+  DashClient::RequestSegment()
   {
     NS_LOG_FUNCTION(this);
 
@@ -176,14 +156,13 @@ namespace ns3
     httpHeader.SetSeq(1);
     httpHeader.SetMessageType(HTTP_REQUEST);
     httpHeader.SetVideoId(m_videoId);
-    httpHeader.SetResolution(bitRate);
+    httpHeader.SetResolution(m_bitRate);
     httpHeader.SetSegmentId(m_segmentId++);
     packet->AddHeader(httpHeader);
 
     if ((unsigned) m_socket->Send(packet) != packet->GetSize())
       {
-        NS_LOG_ERROR("Oh oh. Couldn't send packet!");
-        Simulator::Stop();
+        NS_FATAL_ERROR("Oh oh. Couldn't send packet!");
       }
 
     m_requestTime = Simulator::Now();
@@ -206,7 +185,7 @@ namespace ns3
     NS_LOG_FUNCTION(this << socket);
     NS_LOG_LOGIC("DashClient Connection succeeded");
     m_connected = true;
-    RequestSegment(m_bitRate);
+    RequestSegment();
   }
 
   void
@@ -226,7 +205,6 @@ namespace ns3
 
         NS_LOG_INFO("Something was sent");
 
-        /*Simulator::ScheduleNow (&DashClient::RequestSegment, this);*/
       }
     else
       {
@@ -241,41 +219,21 @@ namespace ns3
 
     MPEGHeader mpegHeader;
     HTTPHeader httpHeader;
-    uint32_t headersize = mpegHeader.GetSerializedSize()
-        + httpHeader.GetSerializedSize();
 
-    double normBitrate = 0;
     if (m_player.m_state == MPEG_PLAYER_NOT_STARTED)
       {
         m_player.Start();
       }
-    else
-      {
-        m_totBytes += message.GetSize();
 
-        double instBitrate = 8 * (message.GetSize() + headersize)
-            / (Simulator::Now() - m_lastRecv).GetSeconds();
-
-        /*
-         if (Simulator::Now() != m_lastRecv)
-         {
-
-         m_player.AddBitRate(Simulator::Now(), instBitrate);
-         }
-         */
-
-        normBitrate = 0.1 * instBitrate + 0.9 * m_bitRate;
-
-        (void) normBitrate;
-
-        NS_LOG_INFO(
-            "------RECEIVED: " << message.GetSize() << " Bitrate = " << (8 * m_totBytes / (Simulator::Now() - m_player.m_start_time).GetSeconds()) << " instBit = " << instBitrate << " normBit = " << normBitrate);
-      }
+    // Send the frame to the player
     m_player.ReceiveFrame(&message);
     m_segment_bytes += message.GetSize();
+    m_totBytes += message.GetSize();
 
     message.RemoveHeader(mpegHeader);
     message.RemoveHeader(httpHeader);
+
+    // Calculate the buffering time
     switch (m_player.m_state)
       {
     case MPEG_PLAYER_PLAYING:
@@ -284,21 +242,22 @@ namespace ns3
     case MPEG_PLAYER_PAUSED:
       break;
     default:
-      NS_LOG_ERROR("WRONG STATE");
-      Simulator::Stop();
+      NS_FATAL_ERROR("WRONG STATE");
       }
 
+    // If we received the last frame of the segment
     if (mpegHeader.GetFrameId() == MPEG_FRAMES_PER_SEGMENT - 1)
       {
-
         double segmentTime = (Simulator::Now() - m_requestTime).GetSeconds();
 
         NS_LOG_INFO(
             Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << segmentTime << " segmentRate: " << 8 * m_segment_bytes / segmentTime);
 
+        // Feed the bitrate info to the player
         m_player.AddBitRate(Simulator::Now(),
             8 * m_segment_bytes / segmentTime);
 
+        // And tell the player to monitor the buffer level
         m_player.LogBufferLevel();
 
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
@@ -312,7 +271,7 @@ namespace ns3
 
         if (bufferDelay == Seconds(0))
           {
-            RequestSegment(m_bitRate);
+            RequestSegment();
           }
         else
           {
@@ -327,10 +286,6 @@ namespace ns3
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
             << " del: " << bufferDelay << std::endl;
 
-        //if (m_lastDt >= 0) {
-        NS_LOG_INFO(
-            " Now: " << Simulator::Now().GetSeconds() << " Node: " << m_id << " Curr: " << currDt.GetSeconds() << " last: " << m_lastDt.GetSeconds() << " Diff: " << (currDt - m_lastDt).GetSeconds() << " Diff2: " << (currDt - m_lastDt).GetSeconds() / (Simulator::Now() - m_lastRecv).GetSeconds());
-        //}
         NS_LOG_INFO(
             "==== Last frame received. Requesting segment " << m_segmentId);
 
@@ -341,7 +296,6 @@ namespace ns3
         m_lastDt = currDt;
 
       }
-    m_lastRecv = Simulator::Now();
 
   }
 
