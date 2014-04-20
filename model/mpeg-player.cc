@@ -78,8 +78,7 @@ namespace ns3
       CalcAAASH(currRate, currDt, diff, nextRate, b_delay);
       break;
     default:
-      NS_LOG_ERROR("Wrong protocol");
-      Simulator::Stop();
+      NS_FATAL_ERROR("Wrong protocol");
       }
   }
 
@@ -124,8 +123,7 @@ namespace ns3
       }
     if (rateInd == rates_size)
       {
-        NS_LOG_ERROR("Wrong rate");
-        Simulator::Stop();
+        NS_FATAL_ERROR("Wrong rate");
       }
 
     nextRate = currRate;
@@ -308,8 +306,7 @@ namespace ns3
       result = output * m_bitrateEstimate;
       break;
     default:
-      NS_LOG_ERROR("Wrong Protocol");
-      Simulator::Stop();
+      NS_FATAL_ERROR("Wrong Protocol");
       }
 
     uint32_t rates[] =

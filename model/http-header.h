@@ -27,11 +27,9 @@
 namespace ns3
 {
   /**
-   * \ingroup udpclientserver
-   * \class HTTPTsHeader
-   * \brief Packet header for Udp client/server application
-   * The header is made of a 32bits sequence number followed by
-   * a 64bits time stamp.
+   * \ingroup dash
+   * \class HTTPTHeader
+   * \brief Packet header for HTTP layer of the DASH protocol
    */
 
 #define HTTP_REQUEST 0
@@ -47,15 +45,16 @@ namespace ns3
      */
     void
     SetSeq(uint32_t seq);
+
     /**
      * \return the sequence number
      */
     uint32_t
     GetSeq(void) const;
+
     /**
      * \return the time stamp
      */
-
     void
     SetMessageType(uint32_t message_type);
     uint32_t

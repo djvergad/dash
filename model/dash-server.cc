@@ -236,8 +236,7 @@ namespace ns3
             NS_LOG_INFO("Could not send frame");
             if (bytes != -1)
               {
-                NS_LOG_ERROR("Oops, we sent half a frame :(");
-                Simulator::Stop();
+                NS_FATAL_ERROR("Oops, we sent half a frame :(");
               }
             break;
           }
@@ -246,10 +245,6 @@ namespace ns3
 
     NS_LOG_INFO("DATA WAS JUST SENT!!!");
 
-    /*  if (m_connectded)
-     { // Only send new data if the connection has completed
-     Simulator::ScheduleNow (&HTTPApplication::SendData, this);
-     }*/
   }
 
   void

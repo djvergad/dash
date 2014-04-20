@@ -37,30 +37,11 @@ namespace ns3
   class Packet;
 
   /**
-   * \ingroup applications
-   * \defgroup packetsink DashServer
+   * \ingroup dash
    *
-   * This application was written to complement OnOffApplication, but it
-   * is more general so a DashServer name was selected.  Functionally it is
-   * important to use in multicast situations, so that reception of the layer-2
-   * multicast frames of interest are enabled, but it is also useful for
-   * unicast as an example of how you can write something simple to receive
-   * packets at the application layer.  Also, if an IP stack generates
-   * ICMP Port Unreachable errors, receiving applications will be needed.
-   */
-
-  /**
-   * \ingroup packetsink
-   *
-   * \brief Receive and consume traffic generated to an IP address and port
-   *
-   * This application was written to complement OnOffApplication, but it
-   * is more general so a DashServer name was selected.  Functionally it is
-   * important to use in multicast situations, so that reception of the layer-2
-   * multicast frames of interest are enabled, but it is also useful for
-   * unicast as an example of how you can write something simple to receive
-   * packets at the application layer.  Also, if an IP stack generates
-   * ICMP Port Unreachable errors, receiving applications will be needed.
+   * \breif This application was written to complement DashClient. It received
+   * requests for MPEG Segments from clients, and responds by transmitting back
+   * the MPEG frames that are contained in the frame
    *
    * The constructor specifies the Address (IP address and port) and the
    * transport protocol to use.   A virtual Receive () method is installed
@@ -77,11 +58,6 @@ namespace ns3
 
     virtual
     ~DashServer();
-
-    /**
-     * \return the total bytes received in this sink app
-     */
-    /* uint32_t GetTotalRx () const;*/
 
     /**
      * \return pointer to listening socket
@@ -106,18 +82,19 @@ namespace ns3
     StopApplication(void);     // Called at time specified by Stop
 
     void
-    HandleRead(Ptr<Socket>);
+    HandleRead(Ptr<Socket>);   // Called when a request is received
     void
-    DataSend(Ptr<Socket>, uint32_t);
+    DataSend(Ptr<Socket>, uint32_t); // Called when a new segment is transmitted
+                                     // or when new space is aveilable in the buffer
     void
     SendSegment(uint32_t video_id, uint32_t resolution, uint32_t segment_id,
-        Ptr<Socket> socket);
+        Ptr<Socket> socket);  // Sends the segment back to the client
     void
-    HandleAccept(Ptr<Socket>, const Address& from);
+    HandleAccept(Ptr<Socket>, const Address& from); // Called hen a new connection is accepted
     void
-    HandlePeerClose(Ptr<Socket>);
+    HandlePeerClose(Ptr<Socket>); // Called when the connection is closed by the peer.
     void
-    HandlePeerError(Ptr<Socket>);
+    HandlePeerError(Ptr<Socket>); // Called when there is a peer error
 
     // In the case of TCP, each socket accept returns a new socket, so the
     // listening socket is stored seperately from the accepted sockets
@@ -128,7 +105,10 @@ namespace ns3
     uint32_t m_totalRx;      // Total bytes received
     TypeId m_tid;          // Protocol TypeId
     TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
+
+    // A structure that contains the generated MPEG frames, for each client.
     std::map<Ptr<Socket>, std::queue<Packet> > m_queues;
+
 
   };
 
