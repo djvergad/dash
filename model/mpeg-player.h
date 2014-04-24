@@ -35,7 +35,7 @@ namespace ns3
 
   enum Protocol
   {
-    FUZZY, AAASH, FUZZYv2
+    FUZZY, AAASH, FUZZYv2, FUZZYv3
   };
 
   class DashClient;

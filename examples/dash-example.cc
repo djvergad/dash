@@ -77,8 +77,7 @@ main(int argc, char *argv[])
       "The adaptation protocol. It can be AAASH, FUZZY, or FUZZYv2 (for now).",
       protocol);
   cmd.AddValue("window",
-      "The window for measuring the average throughput (Time).",
-      window);
+      "The window for measuring the average throughput (Time).", window);
   cmd.Parse(argc, argv);
 
 //
@@ -148,6 +147,10 @@ main(int argc, char *argv[])
       else if (protocol == "FUZZYv2")
         {
           app->GetPlayer().SetProtocol(FUZZYv2);
+        }
+      else if (protocol == "FUZZYv3")
+        {
+          app->GetPlayer().SetProtocol(FUZZYv3);
         }
       else
         {

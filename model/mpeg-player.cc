@@ -36,7 +36,7 @@ namespace ns3
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
           0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
-          AAASH /*FUZZY*/),m_window(Seconds(10))
+          AAASH /*FUZZY*/), m_window(Seconds(10))
   {
     NS_LOG_FUNCTION(this);
   }
@@ -72,6 +72,7 @@ namespace ns3
       {
     case FUZZY: // There is another check
     case FUZZYv2: // inside CalcFuzzy to differentiate.
+    case FUZZYv3:
       CalcFuzzy(currRate, currDt, diff, nextRate, b_delay);
       break;
     case AAASH:
@@ -234,23 +235,70 @@ namespace ns3
         0, p1 = 0, z = 0, n1 = 0, n2 = 0, output = 0;
 
     double t = m_target_dt.GetSeconds();
-    if (currDt < 2 * t / 3)
+
+    double w = 15; // For FUZZYv3
+    double s = 10; // For FUZZYv3
+
+    switch (m_protocol)
       {
-        slow = 1.0;
-      }
-    else if (currDt < t)
-      {
-        slow = 1 - 1 / (t / 3) * (currDt - 2 * t / 3);
-        ok = 1 / (t / 3) * (currDt - 2 * t / 3);
-      }
-    else if (currDt < 4 * t)
-      {
-        ok = 1 - 1 / (3 * t) * (currDt - t);
-        fast = 1 / (3 * t) * (currDt - t);
-      }
-    else
-      {
-        fast = 1;
+    case FUZZY:
+    case FUZZYv2:
+      if (currDt < 2 * t / 3)
+        {
+          slow = 1.0;
+        }
+      else if (currDt < t)
+        {
+          slow = 1 - 1 / (t / 3) * (currDt - 2 * t / 3);
+          ok = 1 / (t / 3) * (currDt - 2 * t / 3);
+        }
+      else if (currDt < 4 * t)
+        {
+          ok = 1 - 1 / (3 * t) * (currDt - t);
+          fast = 1 / (3 * t) * (currDt - t);
+        }
+      else
+        {
+          fast = 1;
+        }
+      break;
+    case FUZZYv3:
+      if (currDt < t - w - s)
+        {
+          slow = 1;
+          ok = 0;
+          fast = 0;
+        }
+      else if (currDt < t - w + s)
+        {
+          slow = 1 - (currDt - (t - w - s)) / (2 * s);
+          ok = (currDt - (t - w - s)) / (2 * s);
+          fast = 0;
+        }
+      else if (currDt < t + w - s)
+        {
+          slow = 0;
+          ok = 1;
+          fast = 0;
+        }
+      else if (currDt < t + w + s)
+        {
+          slow = 0;
+          ok = 1 - (currDt - (t + w - s)) / (2 * s);
+          fast = (currDt - (t + w - s)) / (2 * s);
+        }
+      else
+        {
+          slow = 0;
+          ok = 0;
+          fast = 1;
+        }
+
+      break;
+    case AAASH:
+    default:
+      NS_FATAL_ERROR("Wrong protocol.");
+      break;
       }
 
     if (diff < -2 * t / 3)
@@ -303,6 +351,7 @@ namespace ns3
       result = output * currRate;
       break;
     case FUZZYv2:
+    case FUZZYv3:
       result = output * m_bitrateEstimate;
       break;
     default:
