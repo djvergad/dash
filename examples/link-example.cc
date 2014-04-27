@@ -206,6 +206,10 @@ main(int argc, char *argv[])
         {
           app->GetPlayer().SetProtocol(FUZZYv3);
         }
+      else if (protocol == "FUZZYv4")
+        {
+          app->GetPlayer().SetProtocol(FUZZYv4);
+        }
       else
         {
           std::cerr << "Wrong Protocol!" << std::endl;
