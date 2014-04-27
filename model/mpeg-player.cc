@@ -553,7 +553,7 @@ namespace ns3
 
     uint32_t rates_size = sizeof(rates) / sizeof(rates[0]);
 
-    uint32_t i, k;
+    uint32_t i, k = 0;
 
     nextRate = rates[0];
 
