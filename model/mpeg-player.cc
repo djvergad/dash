@@ -399,12 +399,12 @@ namespace ns3
          }
          */
         double t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-        std::cerr << "bef: " << t_60 << std::endl;
+        /*std::cerr << "bef: " << t_60 << std::endl;*/
         if (t_60 < t)
           {
             nextRate = currRate;
             t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-            std::cerr << "aft: " << t_60 << std::endl;
+            /*std::cerr << "aft: " << t_60 << std::endl;*/
             if (t_60 > t)
               {
                 b_delay = Seconds(t_60 - t);
