@@ -410,7 +410,7 @@ namespace ns3
                 b_delay = Seconds(t_60 - t);
               }
           }
-        std::cerr << b_delay.GetSeconds() << std::endl;
+        /*std::cerr << b_delay.GetSeconds() << std::endl;*/
       }
     else if (nextRate < currRate)
       {

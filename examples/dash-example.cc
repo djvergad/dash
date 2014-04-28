@@ -50,7 +50,7 @@ main(int argc, char *argv[])
   std::string protocol = "AAASH";
   std::string window = "10s";
 
-/*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
+  /*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
 
@@ -156,6 +156,11 @@ main(int argc, char *argv[])
       else if (protocol == "FUZZYv4")
         {
           app->GetPlayer().SetProtocol(FUZZYv4);
+        }
+      else if (protocol == "MIXED")
+        {
+          app->GetPlayer().SetProtocol((user % 2) ? AAASH : FUZZYv2);
+          app->GetPlayer().SetWindow(Time((user % 2) ? "10s" : window));
         }
       else
         {

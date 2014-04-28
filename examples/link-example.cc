@@ -210,6 +210,11 @@ main(int argc, char *argv[])
         {
           app->GetPlayer().SetProtocol(FUZZYv4);
         }
+      else if (protocol == "MIXED")
+        {
+          app->GetPlayer().SetProtocol((user % 2) ? AAASH : FUZZYv2);
+          app->GetPlayer().SetWindow(Time((user % 2) ? "10s" : window));
+        }
       else
         {
           std::cerr << "Wrong Protocol!" << std::endl;
