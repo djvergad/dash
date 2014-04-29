@@ -71,13 +71,16 @@ namespace ns3
     AddBitRate(Time time, double bitrate);
 
     void
-    LogBufferLevel();
+    LogBufferLevel(Time t);
 
     double inline
     GetBitRateEstimate()
     {
       return m_bitrateEstimate;
     }
+
+    double
+    GetBufferEstimate();
 
     void inline
     SchduleBufferWakeup(const Time t, DashClient * client)
@@ -135,7 +138,7 @@ namespace ns3
     std::map<Time, double> m_bitrates;
     double m_bitrateEstimate;
     bool m_running_fast_start;
-    std::list<Time> m_bufferState;
+    std::map<Time, Time> m_bufferState;
     Time m_bufferDelay;
     DashClient * m_dashClient;
     Protocol m_protocol;
