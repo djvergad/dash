@@ -144,6 +144,7 @@ namespace ns3
 	r_down = rates[rateInd - 1];
       }
 
+    std::cerr << "bufinc: " << BufferInc () << " FastStart: " << m_running_fast_start << std::endl;
     if (m_running_fast_start && (rateInd != rates_size - 1) && BufferInc ()
 	&& (currRate <= a1 * m_bitrateEstimate))
       {
