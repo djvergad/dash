@@ -113,7 +113,6 @@ namespace ns3
     uint32_t m_framesPlayed;
     Time m_target_dt;
 
-
   private:
     void
     PlayFrame();
