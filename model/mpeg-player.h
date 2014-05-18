@@ -35,7 +35,7 @@ namespace ns3
 
   enum Protocol
   {
-    FUZZY, AAASH, FUZZYv2, FUZZYv3, FUZZYv4
+    FUZZY, AAASH, FUZZYv2, FUZZYv3, FUZZYv4, OSMP
   };
 
   class DashClient;
@@ -127,6 +127,10 @@ namespace ns3
 
     void
     CalcAAASH(uint32_t currRate, double currDt, double diff,
+        uint32_t & nextRate, Time & b_delay);
+
+    void
+    CalcOSMP(uint32_t currRate, double currDt, double diff,
         uint32_t & nextRate, Time & b_delay);
 
     bool

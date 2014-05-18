@@ -157,6 +157,10 @@ main(int argc, char *argv[])
         {
           app->GetPlayer().SetProtocol(FUZZYv4);
         }
+      else if (protocol == "OSMP")
+        {
+          app->GetPlayer().SetProtocol(OSMP);
+        }
       else if (protocol == "MIXED")
         {
           app->GetPlayer().SetProtocol((user % 2) ? AAASH : FUZZYv2);
