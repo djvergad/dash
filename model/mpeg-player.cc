@@ -129,7 +129,7 @@ namespace ns3
 
     double r_download = 100;
     if (t_last_frag.GetMilliSeconds() > 0) {
-        r_download = MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES
+        r_download = (1.0 * MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES)
         / t_last_frag.GetMilliSeconds();
     }
 
