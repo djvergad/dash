@@ -36,7 +36,8 @@ namespace ns3
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
           0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
-          AAASH /*FUZZY*/), m_window(Seconds(10)), m_counter(0)
+          AAASH /*FUZZY*/), m_window(Seconds(10)), m_counter(0), m_m_k_1(0), m_m_k_2(
+          0)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -107,7 +108,8 @@ namespace ns3
     double q_tk = currDt;
     double q_ref = m_target_dt.GetSeconds();
     double p = 1.0;
-    double f_q = 2 * std::exp(p * (q_tk - q_ref)) / (1 + std::exp(p * (q_tk - q_ref)));
+    double f_q = 2 * std::exp(p * (q_tk - q_ref))
+        / (1 + std::exp(p * (q_tk - q_ref)));
     double delta = TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT;
     double f_t = delta / (delta - diff);
     double f_u = 1;
@@ -118,21 +120,62 @@ namespace ns3
 
     double u_k = f * t_k;
 
+    int m_k = 0;
+    if (diff >= 0.4 * delta)
+      {
+        m_k = 1;
+      }
+    else if (diff >= 0.2 * delta)
+      {
+        m_k = 5;
+      }
+    else if (diff >= 0)
+      {
+        m_k = 15;
+      }
+    else
+      {
+        m_k = 20;
+      }
+
+    int m = (m_k + m_m_k_1 + m_m_k_2) / 3;
+    m_m_k_2 = m_m_k_1;
+    m_m_k_1 = m_k;
+
     if (q_tk < q_ref / 2)
       {
-	int i = rates_size - 1;
-	while (rates[i] > t_k && i > 0)
-	  {
-	    i--;
-	  }
-	nextRate = rates[i];
-	b_delay = Seconds(0);
-	return;
+        int i = rates_size - 1;
+        while (rates[i] > t_k && i > 0)
+          {
+            i--;
+          }
+        nextRate = rates[i];
+        b_delay = Seconds(0);
+        return;
       }
     else if (u_k > currRate)
       {
-	m_counter++;
+        m_counter++;
+        if (m_counter > m)
+          {
+            int i = rates_size - 1;
+            while (rates[i] > t_k && i > 0)
+              {
+                i--;
+              }
+            nextRate = rates[i];
+            b_delay = Seconds(0);
+            m_counter = 0;
+            return;
+          }
       }
+    else if (u_k < currRate)
+      {
+        m_counter = 0;
+      }
+    nextRate = currRate;
+    b_delay = Seconds(0);
+    return;
   }
 
   void
@@ -173,13 +216,14 @@ namespace ns3
     int l_max = rates_size - 1; // The highest quality level;
 
     double r_download = 100;
-    if (t_last_frag.GetMilliSeconds() > 0) {
+    if (t_last_frag.GetMilliSeconds() > 0)
+      {
         r_download = (1.0 * MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES)
-        / t_last_frag.GetMilliSeconds();
-    }
+            / t_last_frag.GetMilliSeconds();
+      }
 
-    std::cerr << "r_download: " << r_download
-        << "\tratio: " << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;
+    std::cerr << "r_download: " << r_download << "\tratio: "
+        << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;
 
     if (r_download < 1)
       {
@@ -199,7 +243,8 @@ namespace ns3
       {
         if (l_cur < l_max)
           {
-            if (l_cur == 0 || r_download > ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
+            if (l_cur == 0
+                || r_download > ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
               {
                 do
                   {
