@@ -36,7 +36,7 @@ namespace ns3
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
           100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
           0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
-          AAASH /*FUZZY*/), m_window(Seconds(10))
+          AAASH /*FUZZY*/), m_window(Seconds(10)), m_counter(0)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -85,8 +85,53 @@ namespace ns3
     case OSMP:
       CalcOSMP(currRate, currDt, diff, nextRate, b_delay);
       break;
+    case SVAA:
+      CalcSVAA(currRate, currDt, diff, nextRate, b_delay);
+      break;
     default:
       NS_FATAL_ERROR("Wrong protocol");
+      }
+  }
+
+  void
+  MpegPlayer::CalcSVAA(uint32_t currRate, double currDt, double diff,
+      uint32_t & nextRate, Time & b_delay)
+  {
+    uint32_t rates[] =
+      { 45000, 89000, 131000, 178000, 221000, 263000, 334000, 396000, 522000,
+          595000, 791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000,
+          3527000, 3840000, 4220000 };
+
+    uint32_t rates_size = sizeof(rates) / sizeof(rates[0]);
+
+    double q_tk = currDt;
+    double q_ref = m_target_dt.GetSeconds();
+    double p = 1.0;
+    double f_q = 2 * std::exp(p * (q_tk - q_ref)) / (1 + std::exp(p * (q_tk - q_ref)));
+    double delta = TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT;
+    double f_t = delta / (delta - diff);
+    double f_u = 1;
+
+    double f = f_q * f_t * f_u;
+
+    double t_k = m_bitrateEstimate;
+
+    double u_k = f * t_k;
+
+    if (q_tk < q_ref / 2)
+      {
+	int i = rates_size - 1;
+	while (rates[i] > t_k && i > 0)
+	  {
+	    i--;
+	  }
+	nextRate = rates[i];
+	b_delay = Seconds(0);
+	return;
+      }
+    else if (u_k > currRate)
+      {
+	m_counter++;
       }
   }
 
