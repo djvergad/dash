@@ -136,6 +136,7 @@ namespace ns3
       {
         m_socket->Close();
         m_connected = false;
+        m_player.m_state = MPEG_PLAYER_DONE;
       }
     else
       {
@@ -226,11 +227,6 @@ namespace ns3
     MPEGHeader mpegHeader;
     HTTPHeader httpHeader;
 
-    if (m_player.m_state == MPEG_PLAYER_NOT_STARTED)
-      {
-        m_player.Start();
-      }
-
     // Send the frame to the player
     m_player.ReceiveFrame(&message);
     m_segment_bytes += message.GetSize();
@@ -247,6 +243,8 @@ namespace ns3
       break;
     case MPEG_PLAYER_PAUSED:
       break;
+    case MPEG_PLAYER_DONE:
+      return;
     default:
       NS_FATAL_ERROR("WRONG STATE");
       }

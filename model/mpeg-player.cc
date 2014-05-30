@@ -222,8 +222,8 @@ namespace ns3
             / t_last_frag.GetMilliSeconds();
       }
 
-/*    std::cerr << "r_download: " << r_download << "\tratio: "
-        << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;*/
+    /*    std::cerr << "r_download: " << r_download << "\tratio: "
+     << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;*/
 
     if (r_download < 1)
       {
@@ -289,7 +289,7 @@ namespace ns3
     Time taf(MilliSeconds(MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES));
 
     Time b_t = m_bufferState.rbegin()->second;
-   // std::cerr << "bt= " << b_t.GetSeconds() << std::endl;
+    // std::cerr << "bt= " << b_t.GetSeconds() << std::endl;
 
     uint32_t rateInd = rates_size;
     for (uint32_t i = 0; i < rates_size; i++)
@@ -320,7 +320,7 @@ namespace ns3
       }
 
     /*std::cerr << "bufinc: " << BufferInc() << " FastStart: "
-        << m_running_fast_start << std::endl;*/
+     << m_running_fast_start << std::endl;*/
     if (m_running_fast_start && (rateInd != rates_size - 1) && BufferInc()
         && (currRate <= a1 * m_bitrateEstimate))
       {
@@ -398,8 +398,8 @@ namespace ns3
     for (std::map<Time, Time>::iterator it = m_bufferState.begin();
         it != m_bufferState.end(); it++)
       {
-      //  std::cerr << it->first.GetSeconds() << " " << it->second.GetSeconds()
-      //      << std::endl;
+        //  std::cerr << it->first.GetSeconds() << " " << it->second.GetSeconds()
+        //      << std::endl;
 
         if (it->second < last)
           {
@@ -603,7 +603,7 @@ namespace ns3
               {
                 nextRate = currRate;
               }
-         //   std::cerr << "aft: " << t_60 << std::endl;
+            //   std::cerr << "aft: " << t_60 << std::endl;
           }
       }
 
@@ -712,17 +712,17 @@ namespace ns3
     /*output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)*/
     output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 2 + p2 * 4)
         / (n2 + n1 + z + p1 + p2);
-/*
+    /*
 
-    std::cerr << "currDt: " << currDt << " throughput: " << throughput
-        << " slow: " << slow << " ok: " << ok << " fast: " << fast
-        << " under_rate: " << under_rate << " at_rate: " << at_rate
-        << " over_rate: " << over_rate << " r1: " << r1 << " r2: " << r2
-        << " r3: " << r3 << " r4: " << r4 << " r5: " << r5 << " r6: " << r6
-        << " r7: " << r7 << " r8: " << r8 << " r9: " << r9 << " p2: " << p2
-        << " p1: " << p1 << " z: " << z << " n1: " << n1 << " n2: " << n2
-        << " output: " << output << std::endl;
-*/
+     std::cerr << "currDt: " << currDt << " throughput: " << throughput
+     << " slow: " << slow << " ok: " << ok << " fast: " << fast
+     << " under_rate: " << under_rate << " at_rate: " << at_rate
+     << " over_rate: " << over_rate << " r1: " << r1 << " r2: " << r2
+     << " r3: " << r3 << " r4: " << r4 << " r5: " << r5 << " r6: " << r6
+     << " r7: " << r7 << " r8: " << r8 << " r9: " << r9 << " p2: " << p2
+     << " p1: " << p1 << " z: " << z << " n1: " << n1 << " n2: " << n2
+     << " output: " << output << std::endl;
+     */
 
     uint32_t result = output * currRate;
 
@@ -753,8 +753,8 @@ namespace ns3
         for (i = k; i >= 0; i--)
           {
             double t_60 = currDt + (throughput / nextRate - 1) * 60;
-           /* std::cerr << k << " " << rates[k] << " " << nextRate << " " << t_60
-                << std::endl;*/
+            /* std::cerr << k << " " << rates[k] << " " << nextRate << " " << t_60
+             << std::endl;*/
             if (t_60 > t)
               {
                 break;
@@ -835,15 +835,24 @@ namespace ns3
   MpegPlayer::ReceiveFrame(Ptr<Packet> message)
   {
     NS_LOG_FUNCTION(this << message);
+    NS_LOG_INFO("Received Frame " << m_state);
 
     Ptr<Packet> msg = message->Copy();
 
     m_queue.push(msg);
     if (m_state == MPEG_PLAYER_PAUSED)
       {
+        NS_LOG_INFO("Play resumed");
         m_state = MPEG_PLAYER_PLAYING;
         m_interruption_time += (Simulator::Now() - m_lastpaused);
         PlayFrame();
+      }
+    else if (m_state == MPEG_PLAYER_NOT_STARTED)
+      {
+        NS_LOG_INFO("Play started");
+        m_state = MPEG_PLAYER_PLAYING;
+        m_start_time = Simulator::Now();
+        Simulator::Schedule(Simulator::Now(), &MpegPlayer::PlayFrame, this);
       }
 
   }
@@ -854,17 +863,19 @@ namespace ns3
     NS_LOG_FUNCTION(this);
     m_state = MPEG_PLAYER_PLAYING;
     m_interruption_time = Seconds(0);
-    m_start_time = Simulator::Now() + m_target_dt;
-    Simulator::Schedule(m_target_dt, &MpegPlayer::PlayFrame, this);
+
   }
 
   void
   MpegPlayer::PlayFrame(void)
   {
     NS_LOG_FUNCTION(this);
+    if (m_state == MPEG_PLAYER_DONE) {
+        return;
+    }
     if (m_queue.empty())
       {
-        NS_LOG_INFO("No frames to play");
+        std::cerr << Simulator::Now().GetSeconds() << " No frames to play" << std::endl;
         m_state = MPEG_PLAYER_PAUSED;
         m_lastpaused = Simulator::Now();
         m_interrruptions++;
