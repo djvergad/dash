@@ -222,8 +222,8 @@ namespace ns3
             / t_last_frag.GetMilliSeconds();
       }
 
-    std::cerr << "r_download: " << r_download << "\tratio: "
-        << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;
+/*    std::cerr << "r_download: " << r_download << "\tratio: "
+        << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;*/
 
     if (r_download < 1)
       {
@@ -289,7 +289,7 @@ namespace ns3
     Time taf(MilliSeconds(MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES));
 
     Time b_t = m_bufferState.rbegin()->second;
-    std::cerr << "bt= " << b_t.GetSeconds() << std::endl;
+   // std::cerr << "bt= " << b_t.GetSeconds() << std::endl;
 
     uint32_t rateInd = rates_size;
     for (uint32_t i = 0; i < rates_size; i++)
@@ -319,8 +319,8 @@ namespace ns3
         r_down = rates[rateInd - 1];
       }
 
-    std::cerr << "bufinc: " << BufferInc() << " FastStart: "
-        << m_running_fast_start << std::endl;
+    /*std::cerr << "bufinc: " << BufferInc() << " FastStart: "
+        << m_running_fast_start << std::endl;*/
     if (m_running_fast_start && (rateInd != rates_size - 1) && BufferInc()
         && (currRate <= a1 * m_bitrateEstimate))
       {
@@ -394,12 +394,12 @@ namespace ns3
   MpegPlayer::BufferInc()
   {
     Time last(Seconds(0));
-    std::cerr << "===" << std::endl;
+    //std::cerr << "===" << std::endl;
     for (std::map<Time, Time>::iterator it = m_bufferState.begin();
         it != m_bufferState.end(); it++)
       {
-        std::cerr << it->first.GetSeconds() << " " << it->second.GetSeconds()
-            << std::endl;
+      //  std::cerr << it->first.GetSeconds() << " " << it->second.GetSeconds()
+      //      << std::endl;
 
         if (it->second < last)
           {
@@ -595,7 +595,7 @@ namespace ns3
     else if (nextRate < currRate)
       {
         double t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-        std::cerr << "bef: " << t_60 << std::endl;
+        //std::cerr << "bef: " << t_60 << std::endl;
         if (t_60 > t)
           {
             t_60 = currDt + (m_bitrateEstimate / currRate - 1) * 60;
@@ -603,7 +603,7 @@ namespace ns3
               {
                 nextRate = currRate;
               }
-            std::cerr << "aft: " << t_60 << std::endl;
+         //   std::cerr << "aft: " << t_60 << std::endl;
           }
       }
 
@@ -712,6 +712,7 @@ namespace ns3
     /*output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 1.4 + p2 * 2)*/
     output = (n2 * 0.25 + n1 * 0.5 + z * 1 + p1 * 2 + p2 * 4)
         / (n2 + n1 + z + p1 + p2);
+/*
 
     std::cerr << "currDt: " << currDt << " throughput: " << throughput
         << " slow: " << slow << " ok: " << ok << " fast: " << fast
@@ -721,6 +722,7 @@ namespace ns3
         << " r7: " << r7 << " r8: " << r8 << " r9: " << r9 << " p2: " << p2
         << " p1: " << p1 << " z: " << z << " n1: " << n1 << " n2: " << n2
         << " output: " << output << std::endl;
+*/
 
     uint32_t result = output * currRate;
 
@@ -751,8 +753,8 @@ namespace ns3
         for (i = k; i >= 0; i--)
           {
             double t_60 = currDt + (throughput / nextRate - 1) * 60;
-            std::cerr << k << " " << rates[k] << " " << nextRate << " " << t_60
-                << std::endl;
+           /* std::cerr << k << " " << rates[k] << " " << nextRate << " " << t_60
+                << std::endl;*/
             if (t_60 > t)
               {
                 break;

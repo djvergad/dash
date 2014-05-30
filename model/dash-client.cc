@@ -150,6 +150,11 @@ namespace ns3
   {
     NS_LOG_FUNCTION(this);
 
+    if (m_connected == false)
+      {
+        return;
+      }
+
     Ptr<Packet> packet = Create<Packet>(100);
 
     HTTPHeader httpHeader;
@@ -160,9 +165,10 @@ namespace ns3
     httpHeader.SetSegmentId(m_segmentId++);
     packet->AddHeader(httpHeader);
 
-    if ((unsigned) m_socket->Send(packet) != packet->GetSize())
+    int res = 0;
+    if ( ((unsigned)(res = m_socket->Send(packet))) != packet->GetSize())
       {
-        NS_FATAL_ERROR("Oh oh. Couldn't send packet!");
+        NS_FATAL_ERROR("Oh oh. Couldn't send packet! res=" << res << " size=" << packet->GetSize());
       }
 
     m_requestTime = Simulator::Now();
