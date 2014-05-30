@@ -870,12 +870,14 @@ namespace ns3
   MpegPlayer::PlayFrame(void)
   {
     NS_LOG_FUNCTION(this);
-    if (m_state == MPEG_PLAYER_DONE) {
+    if (m_state == MPEG_PLAYER_DONE)
+      {
         return;
-    }
+      }
     if (m_queue.empty())
       {
-        std::cerr << Simulator::Now().GetSeconds() << " No frames to play" << std::endl;
+        std::cerr << Simulator::Now().GetSeconds() << " No frames to play"
+            << std::endl;
         m_state = MPEG_PLAYER_PAUSED;
         m_lastpaused = Simulator::Now();
         m_interrruptions++;
@@ -895,6 +897,9 @@ namespace ns3
         http_header.GetResolution() < m_minRate ?
             http_header.GetResolution() : m_minRate;
     m_framesPlayed++;
+
+    /*std::cerr << "res= " << http_header.GetResolution() << " tot="
+        << m_totalRate << " played=" << m_framesPlayed << std::endl;*/
 
     MPEGHeader mpegHeader;
     m_queue.back()->Copy()->RemoveHeader(mpegHeader);
