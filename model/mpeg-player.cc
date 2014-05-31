@@ -880,8 +880,7 @@ namespace ns3
       }
     if (m_queue.empty())
       {
-        std::cerr << Simulator::Now().GetSeconds() << " No frames to play"
-            << std::endl;
+        NS_LOG_INFO(Simulator::Now().GetSeconds() << " No frames to play");
         m_state = MPEG_PLAYER_PAUSED;
         m_lastpaused = Simulator::Now();
         m_interrruptions++;
