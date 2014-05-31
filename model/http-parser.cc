@@ -70,9 +70,8 @@ namespace ns3
 
         if (m_lastmeasurement > Time("0s"))
           {
-            double dt = (Simulator::Now() - m_lastmeasurement).GetSeconds();
             NS_LOG_INFO(
-                Simulator::Now().GetSeconds() << " bytes: " << bytes << " dt: " << dt << " bitrate: " << (8 * (bytes + headersize)/ dt));
+                Simulator::Now().GetSeconds() << " bytes: " << bytes << " dt: " << (Simulator::Now() - m_lastmeasurement).GetSeconds() << " bitrate: " << (8 * (bytes + headersize)/ dt));
           }
         m_lastmeasurement = Simulator::Now();
       }
