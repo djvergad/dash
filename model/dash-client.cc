@@ -167,9 +167,10 @@ namespace ns3
     packet->AddHeader(httpHeader);
 
     int res = 0;
-    if ( ((unsigned)(res = m_socket->Send(packet))) != packet->GetSize())
+    if (((unsigned) (res = m_socket->Send(packet))) != packet->GetSize())
       {
-        NS_FATAL_ERROR("Oh oh. Couldn't send packet! res=" << res << " size=" << packet->GetSize());
+        NS_FATAL_ERROR(
+            "Oh oh. Couldn't send packet! res=" << res << " size=" << packet->GetSize());
       }
 
     m_requestTime = Simulator::Now();
@@ -311,7 +312,8 @@ namespace ns3
         << m_player.m_interrruptions << " avgRate: "
         << (1.0 * m_player.m_totalRate) / m_player.m_framesPlayed
         << " minRate: " << m_player.m_minRate << " AvgDt: "
-        << m_sumDt.GetSeconds() / m_player.m_framesPlayed << std::endl;
+        << m_sumDt.GetSeconds() / m_player.m_framesPlayed << " changes: "
+        << m_player.m_rateChanges << std::endl;
 
   }
 

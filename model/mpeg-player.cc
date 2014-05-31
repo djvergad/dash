@@ -34,10 +34,10 @@ namespace ns3
 
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_bitrateEstimate(
-          0.0), m_running_fast_start(true), m_bufferDelay("0s"), m_protocol(
-          AAASH /*FUZZY*/), m_window(Seconds(10)), m_counter(0), m_m_k_1(0), m_m_k_2(
-          0)
+          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_rateChanges(
+          0), m_bitrateEstimate(0.0), m_running_fast_start(true), m_bufferDelay(
+          "0s"), m_protocol(AAASH /*FUZZY*/), m_window(Seconds(10)), m_counter(
+          0), m_m_k_1(0), m_m_k_2(0)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -91,6 +91,10 @@ namespace ns3
       break;
     default:
       NS_FATAL_ERROR("Wrong protocol");
+      }
+    if (currRate != nextRate)
+      {
+        m_rateChanges++;
       }
   }
 
@@ -899,7 +903,7 @@ namespace ns3
     m_framesPlayed++;
 
     /*std::cerr << "res= " << http_header.GetResolution() << " tot="
-        << m_totalRate << " played=" << m_framesPlayed << std::endl;*/
+     << m_totalRate << " played=" << m_framesPlayed << std::endl;*/
 
     MPEGHeader mpegHeader;
     m_queue.back()->Copy()->RemoveHeader(mpegHeader);

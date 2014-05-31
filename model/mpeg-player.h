@@ -112,6 +112,7 @@ namespace ns3
     uint32_t m_minRate;
     uint32_t m_framesPlayed;
     Time m_target_dt;
+    uint32_t m_rateChanges;
 
   private:
     void
