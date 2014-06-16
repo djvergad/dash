@@ -135,6 +135,8 @@ namespace ns3
     void
     HandleRead(Ptr<Socket>); // Called when we receive data from the server
 
+    void CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay);
+
     MpegPlayer m_player;     // The MpegPlayer object
     HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
     Ptr<Socket> m_socket;    // Associated socket

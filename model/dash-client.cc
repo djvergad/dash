@@ -267,12 +267,14 @@ namespace ns3
         m_player.LogBufferLevel(currDt);
 
         uint32_t old = m_bitRate;
-        double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
+      //  double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
 
         Time bufferDelay;
 
-        m_player.CalcNextSegment(m_bitRate, m_player.GetBufferEstimate(), diff,
-            m_bitRate, bufferDelay);
+        //m_player.CalcNextSegment(m_bitRate, m_player.GetBufferEstimate(), diff,
+            //m_bitRate, bufferDelay);
+
+        CalcNextSegment(m_bitRate, m_bitRate, bufferDelay);
 
         if (bufferDelay == Seconds(0))
           {
@@ -302,6 +304,13 @@ namespace ns3
 
       }
 
+  }
+
+  void
+  DashClient::CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay)
+  {
+    nextRate = currRate;
+    delay = Seconds(0);
   }
 
   void
