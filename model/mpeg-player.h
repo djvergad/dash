@@ -134,14 +134,12 @@ namespace ns3
     CalcSVAA(uint32_t currRate, double currDt, double diff,
         uint32_t & nextRate, Time & b_delay);
 
-    bool
-    BufferInc();
+
 
     Time m_lastpaused;
     std::queue<Ptr<Packet> > m_queue;
     std::map<Time, double> m_bitrates;
     double m_bitrateEstimate;
-    bool m_running_fast_start;
     std::map<Time, Time> m_bufferState;
     Time m_bufferDelay;
     DashClient * m_dashClient;
