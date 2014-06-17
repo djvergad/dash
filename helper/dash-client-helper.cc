@@ -28,13 +28,19 @@
 
 namespace ns3 {
 
-DashClientHelper::DashClientHelper (std::string protocol, Address address)
+DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address)
 {
-  m_factory.SetTypeId ("ns3::OsmpClient");
-  m_factory.Set ("Protocol", StringValue (protocol));
+  m_factory.SetTypeId ("ns3::DashClient");
+  m_factory.Set ("Protocol", StringValue (tcpProtocol));
   m_factory.Set ("Remote", AddressValue (address));
 }
 
+DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address, std::string algorithm)
+{
+  m_factory.SetTypeId (algorithm);
+  m_factory.Set ("Protocol", StringValue (tcpProtocol));
+  m_factory.Set ("Remote", AddressValue (address));
+}
 void
 DashClientHelper::SetAttribute (std::string name, const AttributeValue &value)
 {

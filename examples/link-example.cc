@@ -81,7 +81,7 @@ main(int argc, char *argv[])
   std::string delay = "5ms";
   std::string switchTime = "0s";
   std::string switchStart = "190s";
-  std::string protocol = "AAASH";
+  std::string protocol = "ns3::DashClient";
   std::string window = "10s";
 
   /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
@@ -111,7 +111,7 @@ main(int argc, char *argv[])
       "The time spent on each state (HIGH or LOW). 0 for no switch",
       switchTime);
   cmd.AddValue("protocol",
-      "The adaptation protocol. It can be AAASH, FUZZY, or FUZZYv2 (for now).",
+      "The adaptation protocol. It can be 'ns3::DashClient' or 'ns3::OsmpClient (for now).",
       protocol);
   cmd.AddValue("window",
       "The window for measuring the average throughput (Time).", window);
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
   for (uint32_t user = 1; user <= users; user++)
     {
       DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port));
+          InetSocketAddress(i.GetAddress(1), port), protocol);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
@@ -189,41 +189,6 @@ main(int argc, char *argv[])
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
       app->SetPlayerTargetTime(Seconds(target_dt));
       app->GetPlayer().SetWindow(Time(window));
-
-      if (protocol == "AAASH")
-        {
-          app->GetPlayer().SetProtocol(AAASH);
-        }
-      else if (protocol == "FUZZY")
-        {
-          app->GetPlayer().SetProtocol(FUZZY);
-        }
-      else if (protocol == "FUZZYv2")
-        {
-          app->GetPlayer().SetProtocol(FUZZYv2);
-        }
-      else if (protocol == "FUZZYv3")
-        {
-          app->GetPlayer().SetProtocol(FUZZYv3);
-        }
-      else if (protocol == "OSMP")
-        {
-          app->GetPlayer().SetProtocol(OSMP);
-        }
-      else if (protocol == "SVAA")
-        {
-          app->GetPlayer().SetProtocol(SVAA);
-        }
-      else if (protocol == "MIXED")
-        {
-          app->GetPlayer().SetProtocol((user % 2) ? AAASH : FUZZYv2);
-          app->GetPlayer().SetWindow(Time((user % 2) ? "10s" : window));
-        }
-      else
-        {
-          std::cerr << "Wrong Protocol!" << std::endl;
-          return -1;
-        }
 
       clients.push_back(client);
       clientApps.push_back(clientApp);

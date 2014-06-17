@@ -103,6 +103,7 @@ namespace ns3
     DoDispose(void);
 
     std::map<Time, Time> m_bufferState;
+    uint32_t m_rateChanges;
 
   private:
 

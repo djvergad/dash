@@ -51,7 +51,22 @@ public:
    * \param address the address of the remote node to send traffic
    *        to.
    */
-  DashClientHelper (std::string protocol, Address address);
+  DashClientHelper (std::string tcpProtocol, Address address);
+
+  /**
+    * Create an DashClientHelper to make it easier to work with DashClients
+    *
+    * \param protocol the name of the protocol to use to send traffic
+    *        by the applications. This string identifies the socket
+    *        factory type used to create sockets for the applications.
+    *        A typical value would be ns3::UdpSocketFactory.
+    * \param address the address of the remote node to send traffic
+    *        to.
+    * \param algorithm The algorithm that will be implemented by the Dash
+    *        Client to determine the resolution and the delay for the request
+    *        for the next segment.
+    */
+   DashClientHelper (std::string tcpProtocol, Address address, std::string algorithm);
 
   /**
    * Helper function used to set the underlying application attributes, 

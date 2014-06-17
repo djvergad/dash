@@ -56,7 +56,7 @@ namespace ns3
   }
 
   DashClient::DashClient() :
-      m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
+      m_rateChanges(0), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
           m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
           45000), m_window(Seconds(10))
@@ -266,16 +266,22 @@ namespace ns3
         // And tell the player to monitor the buffer level
         LogBufferLevel(currDt);
 
-
         uint32_t old = m_bitRate;
-      //  double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
+        //  double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
 
         Time bufferDelay;
 
         //m_player.CalcNextSegment(m_bitRate, m_player.GetBufferEstimate(), diff,
-            //m_bitRate, bufferDelay);
+        //m_bitRate, bufferDelay);
 
-        CalcNextSegment(m_bitRate, m_bitRate, bufferDelay);
+        uint32_t prevBitrate = m_bitRate;
+
+        CalcNextSegment(prevBitrate , m_bitRate, bufferDelay);
+
+        if (prevBitrate != m_bitRate)
+          {
+            m_rateChanges ++;
+          }
 
         if (bufferDelay == Seconds(0))
           {
@@ -308,7 +314,8 @@ namespace ns3
   }
 
   void
-  DashClient::CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay)
+  DashClient::CalcNextSegment(uint32_t currRate, uint32_t & nextRate,
+      Time & delay)
   {
     nextRate = currRate;
     delay = Seconds(0);
@@ -323,7 +330,7 @@ namespace ns3
         << (1.0 * m_player.m_totalRate) / m_player.m_framesPlayed
         << " minRate: " << m_player.m_minRate << " AvgDt: "
         << m_sumDt.GetSeconds() / m_player.m_framesPlayed << " changes: "
-        << m_player.m_rateChanges << std::endl;
+        << m_rateChanges << std::endl;
 
   }
 
