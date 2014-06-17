@@ -102,6 +102,8 @@ namespace ns3
     virtual void
     DoDispose(void);
 
+    std::map<Time, Time> m_bufferState;
+
   private:
 
     /**
@@ -134,8 +136,15 @@ namespace ns3
     DataSend(Ptr<Socket>, uint32_t); // Called when the data has been transmitted
     void
     HandleRead(Ptr<Socket>); // Called when we receive data from the server
-
-    void CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay);
+    virtual void
+    CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay);
+    void
+    LogBufferLevel(Time t);
+    void inline
+    SetWindow(Time time)
+    {
+      m_window = time;
+    }
 
     MpegPlayer m_player;     // The MpegPlayer object
     HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
@@ -156,6 +165,7 @@ namespace ns3
     Time m_requestTime;      // Time of sending the last request
     uint32_t m_segment_bytes; // Bytes of the current segment that have been received so far
     uint32_t m_bitRate;      // The bitrate of the current segment.
+    Time m_window;
   };
 
 } // namespace ns3

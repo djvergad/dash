@@ -30,7 +30,7 @@ namespace ns3 {
 
 DashClientHelper::DashClientHelper (std::string protocol, Address address)
 {
-  m_factory.SetTypeId ("ns3::DashClient");
+  m_factory.SetTypeId ("ns3::OsmpClient");
   m_factory.Set ("Protocol", StringValue (protocol));
   m_factory.Set ("Remote", AddressValue (address));
 }

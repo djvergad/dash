@@ -59,7 +59,7 @@ namespace ns3
       m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
           m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
-          45000)
+          45000), m_window(Seconds(10))
   {
     NS_LOG_FUNCTION(this);
     m_parser.SetApp(this); // So the parser knows where to send the received messages
@@ -264,7 +264,8 @@ namespace ns3
 
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
         // And tell the player to monitor the buffer level
-        m_player.LogBufferLevel(currDt);
+        LogBufferLevel(currDt);
+
 
         uint32_t old = m_bitRate;
       //  double diff = m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0;
@@ -330,6 +331,20 @@ namespace ns3
   DashClient::SetPlayerTargetTime(Time time)
   {
     m_player.m_target_dt = time;
+  }
+
+  void
+  DashClient::LogBufferLevel(Time t)
+  {
+    m_bufferState[Simulator::Now()] = t;
+    for (std::map<Time, Time>::iterator it = m_bufferState.begin();
+        it != m_bufferState.end(); ++it)
+      {
+        if (it->first < (Simulator::Now() - m_window))
+          {
+            m_bufferState.erase(it->first);
+          }
+      }
   }
 
 } // Namespace ns3
