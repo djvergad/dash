@@ -51,8 +51,12 @@ namespace ns3
             TypeIdValue(TcpSocketFactory::GetTypeId()),
             MakeTypeIdAccessor(&DashClient::m_tid), MakeTypeIdChecker()).AddAttribute(
             "TargetDt", "The target buffering time", TimeValue(Time("35s")),
-            MakeTimeAccessor(&DashClient::m_target_dt), MakeTimeChecker()).AddTraceSource(
-            "Tx", "A new packet is created and is sent",
+            MakeTimeAccessor(&DashClient::m_target_dt), MakeTimeChecker()).AddAttribute(
+            "window", "The window for measuring the average throughput (Time)",
+            TimeValue(Time("10s")), MakeTimeAccessor(&DashClient::m_window),
+            MakeTimeChecker()
+
+            ).AddTraceSource("Tx", "A new packet is created and is sent",
             MakeTraceSourceAccessor(&DashClient::m_txTrace));
     return tid;
   }
@@ -295,9 +299,9 @@ namespace ns3
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
-            << " estBitRate: " << GetBitRateEstimate()
-            << " interTime: " << m_player.m_interruption_time.GetSeconds()
-            << " T: " << currDt.GetSeconds() << " dT: "
+            << " estBitRate: " << GetBitRateEstimate() << " interTime: "
+            << m_player.m_interruption_time.GetSeconds() << " T: "
+            << currDt.GetSeconds() << " dT: "
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
             << " del: " << bufferDelay << std::endl;
 
@@ -333,12 +337,6 @@ namespace ns3
         << m_sumDt.GetSeconds() / m_player.m_framesPlayed << " changes: "
         << m_rateChanges << std::endl;
 
-  }
-
-  void
-  DashClient::SetPlayerTargetTime(Time time)
-  {
-    m_player.m_target_dt = time;
   }
 
   void

@@ -95,12 +95,10 @@ DashTestCase1::DoRun (void)
           InetSocketAddress(i.GetAddress(1), port));
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
+      client.SetAttribute("window", TimeValue(Seconds(target_dt)));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
       clientApp.Start(Seconds(1.0));
       clientApp.Stop(Seconds(stopTime));
-
-      Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
-      app->SetPlayerTargetTime(Seconds(target_dt));
 
       clients.push_back(client);
       clientApps.push_back(clientApp);

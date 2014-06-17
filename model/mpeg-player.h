@@ -33,11 +33,6 @@ namespace ns3
     MPEG_PLAYER_PAUSED, MPEG_PLAYER_PLAYING, MPEG_PLAYER_NOT_STARTED, MPEG_PLAYER_DONE
   };
 
-  enum Protocol
-  {
-    FUZZY, AAASH, FUZZYv2, FUZZYv3, OSMP, SVAA
-  };
-
   class DashClient;
 
   class MpegPlayer
@@ -60,47 +55,11 @@ namespace ns3
     Time
     GetRealPlayTime(Time playTime);
 
-    void
-    CalcNextSegment(uint32_t currRate, double currDt, double diff,
-        uint32_t & nextRate, Time & b_delay);
-
-    Time
-    CalcSendTime(uint32_t currRate, double currDt, double diff);
-
-    void
-    AddBitRate(Time time, double bitrate);
-
-    void
-    LogBufferLevel(Time t);
-
-    double inline
-    GetBitRateEstimate()
-    {
-      return m_bitrateEstimate;
-    }
-
-    double
-    GetBufferEstimate();
-
     void inline
     SchduleBufferWakeup(const Time t, DashClient * client)
     {
       m_bufferDelay = t;
       m_dashClient = client;
-
-    }
-
-    void inline
-    SetProtocol(Protocol protocol)
-    {
-      m_protocol = protocol;
-
-    }
-
-    void inline
-    SetWindow(Time time)
-    {
-      m_window = time;
     }
 
     int m_state;
@@ -111,40 +70,15 @@ namespace ns3
     uint32_t m_totalRate;
     uint32_t m_minRate;
     uint32_t m_framesPlayed;
-    Time m_target_dt;
-    uint32_t m_rateChanges;
 
   private:
     void
     PlayFrame();
 
-    void
-    CalcFuzzy(uint32_t currRate, double currDt, double diff,
-        uint32_t & nextRate, Time & b_delay);
-
-    void
-    CalcAAASH(uint32_t currRate, double currDt, double diff,
-        uint32_t & nextRate, Time & b_delay);
-
-    void
-    CalcOSMP(uint32_t currRate, double currDt, double diff,
-        uint32_t & nextRate, Time & b_delay);
-
-    void
-    CalcSVAA(uint32_t currRate, double currDt, double diff,
-        uint32_t & nextRate, Time & b_delay);
-
-
-
     Time m_lastpaused;
     std::queue<Ptr<Packet> > m_queue;
-    std::map<Time, double> m_bitrates;
-    double m_bitrateEstimate;
-    std::map<Time, Time> m_bufferState;
     Time m_bufferDelay;
     DashClient * m_dashClient;
-    Protocol m_protocol;
-    Time m_window;
 
   };
 } // namespace ns3

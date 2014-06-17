@@ -81,12 +81,6 @@ namespace ns3
     void
     GetStats();
 
-    /*
-     * \brief Sets the target buffering time for the player.
-     */
-    void
-    SetPlayerTargetTime(Time time);
-
     /**
      * \return The MpegPlayer object that is used for buffering and
      * reproducing the video, and for estimating the next bitrate (resolution)

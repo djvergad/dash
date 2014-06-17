@@ -129,12 +129,10 @@ main(int argc, char *argv[])
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
+      client.SetAttribute("window", TimeValue(Time(window)));
       ApplicationContainer clientApp = client.Install(wifiStaNodes.Get(user));
       clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
-
-      Ptr<DashClient> app = DynamicCast<DashClient>(clientApp.Get(0));
-      app->GetPlayer().SetWindow(Time(window));
 
       clients.push_back(client);
       clientApps.push_back(clientApp);

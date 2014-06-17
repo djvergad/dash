@@ -34,9 +34,7 @@ namespace ns3
 
   MpegPlayer::MpegPlayer() :
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_framesPlayed(0), m_target_dt(Seconds(7.0)), m_rateChanges(
-          0), m_bitrateEstimate(0.0), m_bufferDelay(
-          "0s"), m_protocol(AAASH /*FUZZY*/), m_window(Seconds(10))
+          100000000), m_framesPlayed(0), m_bufferDelay("0s")
   {
     NS_LOG_FUNCTION(this);
   }
@@ -62,107 +60,6 @@ namespace ns3
         + (m_state == MPEG_PLAYER_PAUSED ?
             (Simulator::Now() - m_lastpaused) : Seconds(0)) + playTime
         - Simulator::Now();
-  }
-
-  void
-  MpegPlayer::CalcNextSegment(uint32_t currRate, double currDt, double diff,
-      uint32_t & nextRate, Time & b_delay)
-  {
-    switch (m_protocol)
-      {
-    case FUZZY: // There is another check
-    case FUZZYv2: // inside CalcFuzzy to differentiate.
-    case FUZZYv3:
-      CalcFuzzy(currRate, currDt, diff, nextRate, b_delay);
-      break;
-    case AAASH:
-      CalcAAASH(currRate, currDt, diff, nextRate, b_delay);
-      break;
-    case OSMP:
-      CalcOSMP(currRate, currDt, diff, nextRate, b_delay);
-      break;
-    case SVAA:
-      CalcSVAA(currRate, currDt, diff, nextRate, b_delay);
-      break;
-    default:
-      NS_FATAL_ERROR("Wrong protocol");
-      }
-    if (currRate != nextRate)
-      {
-        m_rateChanges++;
-      }
-  }
-
-  void
-  MpegPlayer::CalcSVAA(uint32_t currRate, double currDt, double diff,
-      uint32_t & nextRate, Time & b_delay)
-  {
-
-  }
-
-  void
-  MpegPlayer::CalcOSMP(uint32_t currRate, double currDt, double diff,
-      uint32_t & nextRate, Time & b_delay)
-  {
-
-  }
-
-  void
-  MpegPlayer::CalcAAASH(uint32_t currRate, double currDt, double diff,
-      uint32_t & nextRate, Time & b_delay)
-  {
-
-  }
-
-  void
-  MpegPlayer::CalcFuzzy(uint32_t currRate, double currDt, double diff,
-      uint32_t & nextRate, Time & b_delay)
-  {
-
-  }
-
-  Time
-  MpegPlayer::CalcSendTime(uint32_t currRate, double currDt, double diff)
-  {
-    return Seconds(0);
-  }
-
-  void
-  MpegPlayer::AddBitRate(Time time, double bitrate)
-  {
-    m_bitrates[time] = bitrate;
-    double sum = 0;
-    int count = 0;
-    for (std::map<Time, double>::iterator it = m_bitrates.begin();
-        it != m_bitrates.end(); ++it)
-      {
-        if (it->first < (Simulator::Now() - m_window))
-          {
-            m_bitrates.erase(it->first);
-          }
-        else
-          {
-            sum += it->second;
-            count++;
-          }
-      }
-    m_bitrateEstimate = sum / count;
-    /*std::cout << bitrate << "\t\t" << m_bitrateEstimate << "\tsum= " << sum
-     << "\tcount= " << count << std::endl;*/
-  }
-
-  double
-  MpegPlayer::GetBufferEstimate()
-  {
-    double sum = 0;
-    int count = 0;
-    for (std::map<Time, Time>::iterator it = m_bufferState.begin();
-        it != m_bufferState.end(); ++it)
-      {
-        sum += it->second.GetSeconds();
-        count++;
-      }
-    return sum / count;
   }
 
   void
