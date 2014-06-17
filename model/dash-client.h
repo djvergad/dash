@@ -102,8 +102,25 @@ namespace ns3
     virtual void
     DoDispose(void);
 
+    double inline
+    GetBitRateEstimate()
+    {
+      return m_bitrateEstimate;
+    }
+
+    double GetBufferDifferential();
+
+    void
+    AddBitRate(Time time, double bitrate);
+
+    double
+    GetBufferEstimate();
+
     std::map<Time, Time> m_bufferState;
     uint32_t m_rateChanges;
+    Time m_target_dt;
+    std::map<Time, double> m_bitrates;
+    double m_bitrateEstimate;
 
   private:
 

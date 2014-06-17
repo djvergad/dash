@@ -147,9 +147,6 @@ namespace ns3
     DashClient * m_dashClient;
     Protocol m_protocol;
     Time m_window;
-    int m_counter;
-    int m_m_k_1;
-    int m_m_k_2;
 
   };
 } // namespace ns3

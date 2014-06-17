@@ -47,19 +47,21 @@ namespace ns3
             MakeUintegerChecker<uint32_t>(1)).AddAttribute("Remote",
             "The address of the destination", AddressValue(),
             MakeAddressAccessor(&DashClient::m_peer), MakeAddressChecker()).AddAttribute(
-            "Protocol", "The type of protocol to use.",
+            "Protocol", "The type of TCP protocol to use.",
             TypeIdValue(TcpSocketFactory::GetTypeId()),
-            MakeTypeIdAccessor(&DashClient::m_tid), MakeTypeIdChecker()).AddTraceSource(
+            MakeTypeIdAccessor(&DashClient::m_tid), MakeTypeIdChecker()).AddAttribute(
+            "TargetDt", "The target buffering time", TimeValue(Time("35s")),
+            MakeTimeAccessor(&DashClient::m_target_dt), MakeTimeChecker()).AddTraceSource(
             "Tx", "A new packet is created and is sent",
             MakeTraceSourceAccessor(&DashClient::m_txTrace));
     return tid;
   }
 
   DashClient::DashClient() :
-      m_rateChanges(0), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
-          Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
-          m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
-          45000), m_window(Seconds(10))
+      m_rateChanges(0), m_target_dt("35s"), m_bitrateEstimate(0.0), m_socket(0), m_connected(
+          false), m_totBytes(0), m_startedReceiving(Seconds(0)), m_sumDt(
+          Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++), m_requestTime(
+          "0s"), m_segment_bytes(0), m_bitRate(45000), m_window(Seconds(10))
   {
     NS_LOG_FUNCTION(this);
     m_parser.SetApp(this); // So the parser knows where to send the received messages
@@ -259,8 +261,7 @@ namespace ns3
             Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << segmentTime << " segmentRate: " << 8 * m_segment_bytes / segmentTime);
 
         // Feed the bitrate info to the player
-        m_player.AddBitRate(Simulator::Now(),
-            8 * m_segment_bytes / segmentTime);
+        AddBitRate(Simulator::Now(), 8 * m_segment_bytes / segmentTime);
 
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
         // And tell the player to monitor the buffer level
@@ -276,11 +277,11 @@ namespace ns3
 
         uint32_t prevBitrate = m_bitRate;
 
-        CalcNextSegment(prevBitrate , m_bitRate, bufferDelay);
+        CalcNextSegment(prevBitrate, m_bitRate, bufferDelay);
 
         if (prevBitrate != m_bitRate)
           {
-            m_rateChanges ++;
+            m_rateChanges++;
           }
 
         if (bufferDelay == Seconds(0))
@@ -294,7 +295,7 @@ namespace ns3
 
         std::cout << Simulator::Now().GetSeconds() << " Node: " << m_id
             << " newBitRate: " << m_bitRate << " oldBitRate: " << old
-            << " estBitRate: " << m_player.GetBitRateEstimate()
+            << " estBitRate: " << GetBitRateEstimate()
             << " interTime: " << m_player.m_interruption_time.GetSeconds()
             << " T: " << currDt.GetSeconds() << " dT: "
             << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds() : 0)
@@ -352,6 +353,65 @@ namespace ns3
             m_bufferState.erase(it->first);
           }
       }
+  }
+
+  double
+  DashClient::GetBufferEstimate()
+  {
+    double sum = 0;
+    int count = 0;
+    for (std::map<Time, Time>::iterator it = m_bufferState.begin();
+        it != m_bufferState.end(); ++it)
+      {
+        sum += it->second.GetSeconds();
+        count++;
+      }
+    return sum / count;
+  }
+
+  double
+  DashClient::GetBufferDifferential()
+  {
+    std::map<Time, Time>::iterator it = m_bufferState.end();
+
+    if (it == m_bufferState.begin())
+      {
+        // Empty buffer
+        return 0;
+      }
+    it--;
+    Time last = it->second;
+
+    if (it == m_bufferState.begin())
+      {
+        // Only one element
+        return 0;
+      }
+    it--;
+    Time prev = it->second;
+    return (last - prev).GetSeconds();
+  }
+
+  void
+  DashClient::AddBitRate(Time time, double bitrate)
+  {
+    m_bitrates[time] = bitrate;
+    double sum = 0;
+    int count = 0;
+    for (std::map<Time, double>::iterator it = m_bitrates.begin();
+        it != m_bitrates.end(); ++it)
+      {
+        if (it->first < (Simulator::Now() - m_window))
+          {
+            m_bitrates.erase(it->first);
+          }
+        else
+          {
+            sum += it->second;
+            count++;
+          }
+      }
+    m_bitrateEstimate = sum / count;
   }
 
 } // Namespace ns3
