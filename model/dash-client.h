@@ -118,6 +118,7 @@ namespace ns3
     Time m_target_dt;
     std::map<Time, double> m_bitrates;
     double m_bitrateEstimate;
+    uint32_t m_segmentId;    // The id of the current segment
 
   private:
 
@@ -171,7 +172,6 @@ namespace ns3
     TypeId m_tid;
     TracedCallback<Ptr<const Packet> > m_txTrace;
     uint32_t m_videoId;      // The Id of the video that is requested
-    uint32_t m_segmentId;    // The id of the current segment
     Time m_startedReceiving; // Time of reception of the first MPEG frame
     Time m_sumDt;            // Used for calculating the average buffering time
     Time m_lastDt; // The previous buffering time (used for calculating the differential
