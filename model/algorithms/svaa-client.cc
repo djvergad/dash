@@ -54,7 +54,7 @@ namespace ns3
     double p = 1.0;
     double f_q = 2 * std::exp(p * (q_tk - q_ref))
         / (1 + std::exp(p * (q_tk - q_ref)));
-    double delta = TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT / 1000.0;
+    double delta = MPEG_TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT / 1000.0;
     double f_t = delta / (delta - diff);
     double f_u = 1;
 

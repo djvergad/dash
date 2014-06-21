@@ -61,7 +61,7 @@ namespace ns3
     Time b_high("50s");
     Time b_opt = Seconds((b_low + b_high).GetSeconds() * 0.5);
 
-    Time taf(MilliSeconds(MPEG_FRAMES_PER_SEGMENT * TIME_BETWEEN_FRAMES));
+    Time taf(MilliSeconds(MPEG_FRAMES_PER_SEGMENT * MPEG_TIME_BETWEEN_FRAMES));
 
     Time b_t = m_bufferState.rbegin()->second;
     // std::cerr << "bt= " << b_t.GetSeconds() << std::endl;

@@ -65,7 +65,8 @@ namespace ns3
       m_rateChanges(0), m_target_dt("35s"), m_bitrateEstimate(0.0), m_socket(0), m_connected(
           false), m_totBytes(0), m_startedReceiving(Seconds(0)), m_sumDt(
           Seconds(0)), m_lastDt(Seconds(-1)), m_id(m_countObjs++), m_requestTime(
-          "0s"), m_segment_bytes(0), m_bitRate(45000), m_window(Seconds(10))
+          "0s"), m_segment_bytes(0), m_bitRate(45000), m_window(Seconds(10)), m_segmentFetchTime(
+          Seconds(0))
   {
     NS_LOG_FUNCTION(this);
     m_parser.SetApp(this); // So the parser knows where to send the received messages
@@ -259,13 +260,14 @@ namespace ns3
     // If we received the last frame of the segment
     if (mpegHeader.GetFrameId() == MPEG_FRAMES_PER_SEGMENT - 1)
       {
-        double segmentTime = (Simulator::Now() - m_requestTime).GetSeconds();
+        m_segmentFetchTime = Simulator::Now() - m_requestTime;
 
         NS_LOG_INFO(
-            Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << segmentTime << " segmentRate: " << 8 * m_segment_bytes / segmentTime);
+            Simulator::Now().GetSeconds() << " bytes: " << m_segment_bytes << " segmentTime: " << m_segmentFetchTime.GetSeconds() << " segmentRate: " << 8 * m_segment_bytes /  m_segmentFetchTime.GetSeconds());
 
         // Feed the bitrate info to the player
-        AddBitRate(Simulator::Now(), 8 * m_segment_bytes / segmentTime);
+        AddBitRate(Simulator::Now(),
+            8 * m_segment_bytes / m_segmentFetchTime.GetSeconds());
 
         Time currDt = m_player.GetRealPlayTime(mpegHeader.GetPlaybackTime());
         // And tell the player to monitor the buffer level
@@ -388,6 +390,12 @@ namespace ns3
     it--;
     Time prev = it->second;
     return (last - prev).GetSeconds();
+  }
+
+  double
+  DashClient::GetSegmentFetchTime()
+  {
+    return m_segmentFetchTime.GetSeconds();
   }
 
   void

@@ -276,7 +276,7 @@ namespace ns3
         mpeg_header.SetPlaybackTime(
             MilliSeconds(
                 (f_id + (segment_id * MPEG_FRAMES_PER_SEGMENT))
-                    * TIME_BETWEEN_FRAMES)); //50 fps
+                    * MPEG_TIME_BETWEEN_FRAMES)); //50 fps
         mpeg_header.SetType('B');
         mpeg_header.SetSize(frame_size);
 
