@@ -57,17 +57,16 @@ namespace ns3
 
     double t_min = 9; // Seconds
 
-    double epsilon;
+    double epsilon = 0.0;
     uint32_t i;
     for (i = 0; i < rates_size - 1; i++)
       {
         epsilon = std::max(epsilon, (1.0 * rates[i + 1] - rates[i]) / rates[i]);
       }
-    (void) epsilon; // Otherwise unused value when optimized
 
     double gamma_d = 0.67; // Switch down factor
 
-    uint32_t rateInd = rates_size;
+    double rateInd = rates_size;
     for (uint32_t i = 0; i < rates_size; i++)
       {
         if (rates[i] == currRate)
@@ -85,7 +84,7 @@ namespace ns3
       {
         if (rateInd < rates_size - 1)
           {
-            nextRate = rates[rateInd + 1];
+            nextRate = rates[(int)rateInd + 1];
           }
       }
     else if (mi < gamma_d) // Switch down
