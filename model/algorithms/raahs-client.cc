@@ -63,6 +63,7 @@ namespace ns3
       {
         epsilon = std::max(epsilon, (1.0 * rates[i + 1] - rates[i]) / rates[i]);
       }
+    epsilon = epsilon + 0; // Otherwise unused value when optimized
 
     double gamma_d = 0.67; // Switch down factor
 
