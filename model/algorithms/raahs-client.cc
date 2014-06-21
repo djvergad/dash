@@ -66,7 +66,7 @@ namespace ns3
 
     if (false)
       {
-        std::cout (epsilon); // Otherwise unused value when optimized
+        std::cout << epsilon; // Otherwise unused value when optimized
       }
     double gamma_d = 0.67; // Switch down factor
 
