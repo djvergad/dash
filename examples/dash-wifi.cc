@@ -181,5 +181,14 @@ main(int argc, char *argv[])
   AnimationInterface anim("dash-wifi.xml");
   Simulator::Run();
   Simulator::Destroy();
+
+  uint32_t k;
+  for (k = 0; k < users; k++)
+    {
+      Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
+      std::cout << "Node: " << k;
+      app->GetStats();
+    }
+
   return 0;
 }
