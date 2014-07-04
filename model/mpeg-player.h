@@ -67,7 +67,7 @@ namespace ns3
     int m_interrruptions;
 
     Time m_start_time;
-    uint32_t m_totalRate;
+    uint64_t m_totalRate;
     uint32_t m_minRate;
     uint32_t m_framesPlayed;
 
