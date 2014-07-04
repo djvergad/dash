@@ -122,9 +122,12 @@ namespace ns3
     message->RemoveHeader(http_header);
 
     m_totalRate += http_header.GetResolution();
-    m_minRate =
-        http_header.GetResolution() < m_minRate ?
-            http_header.GetResolution() : m_minRate;
+    if (http_header.GetSegmentId() > 0) // Discard the first segment for the minRate
+      {                                 // calculation, as it is always the minimum rate
+        m_minRate =
+            http_header.GetResolution() < m_minRate ?
+                http_header.GetResolution() : m_minRate;
+      }
     m_framesPlayed++;
 
     /*std::cerr << "res= " << http_header.GetResolution() << " tot="
