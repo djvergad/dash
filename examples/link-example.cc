@@ -168,9 +168,15 @@ main(int argc, char *argv[])
 
   NS_LOG_INFO("Create Applications.");
 
-//
-// Create a BulkSendApplication and install it on node 0
-//
+  std::string protocols[users];
+  std::stringstream ss(protocol);
+  std::string proto;
+  uint32_t protoNum = 0; // The number of protocols (algorithms)
+  while (std::getline(ss, proto, ',') && protoNum < users)
+    {
+      protocols[protoNum++] = proto;
+    }
+
   uint16_t port = 80;  // well-known echo port number
 
   std::vector<DashClientHelper> clients;
@@ -179,11 +185,14 @@ main(int argc, char *argv[])
   for (uint32_t user = 1; user <= users; user++)
     {
       DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port), protocol);
+          InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
       client.SetAttribute("VideoId", UintegerValue(user));
-      client.SetAttribute("window", TimeValue(Time(window)));
+      client.SetAttribute("window",
+          protocols[user % protoNum] == "ns3::AaashClient" ?
+              TimeValue(Time("10s")) : TimeValue(Time(window)));
+
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
       clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
@@ -222,7 +231,7 @@ main(int argc, char *argv[])
   for (k = 0; k < users; k++)
     {
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
-      std::cout << "Node: " << k;
+      std::cout << protocols[k % protoNum] << "-Node: " << k;
       app->GetStats();
     }
 
