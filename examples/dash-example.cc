@@ -135,9 +135,7 @@ main(int argc, char *argv[])
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("VideoId", UintegerValue(user));
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
-      client.SetAttribute("window",
-          protocols[user % protoNum] == "ns3::AaashClient" ?
-              TimeValue(Time("10s")) : TimeValue(Time(window)));
+      client.SetAttribute("window", TimeValue(Time(window)));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
       clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
