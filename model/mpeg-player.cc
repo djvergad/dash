@@ -21,7 +21,6 @@
 #include "ns3/log.h"
 #include "ns3/nstime.h"
 #include "ns3/simulator.h"
-#include "ns3/random-variable.h"
 #include "http-header.h"
 #include "mpeg-header.h"
 #include "mpeg-player.h"

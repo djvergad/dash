@@ -34,8 +34,9 @@
 #include "dash-server.h"
 #include "http-header.h"
 #include "mpeg-header.h"
-#include <ns3/random-variable.h>
+#include <ns3/random-variable-stream.h>
 #include <ns3/tcp-socket.h>
+#include <ns3/double.h>
 
 namespace ns3
 {
@@ -255,11 +256,15 @@ namespace ns3
 
     HTTPHeader http_header_tmp;
     MPEGHeader mpeg_header_tmp;
-    UniformVariable frame_size_gen(0,
+
+    UniformRandomVariable frame_size_gen;
+
+    frame_size_gen.SetAttribute ("Min", DoubleValue (0));
+    frame_size_gen.SetAttribute ("Max", DoubleValue (
         std::max(
             std::min(2 * avg_packetsize, MPEG_MAX_MESSAGE)
                 - (int) (mpeg_header_tmp.GetSerializedSize()
-                    + http_header_tmp.GetSerializedSize()), 1));
+                    + http_header_tmp.GetSerializedSize()), 1)));
 
     for (uint32_t f_id = 0; f_id < MPEG_FRAMES_PER_SEGMENT; f_id++)
       {
