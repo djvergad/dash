@@ -257,10 +257,10 @@ namespace ns3
     HTTPHeader http_header_tmp;
     MPEGHeader mpeg_header_tmp;
 
-    UniformRandomVariable frame_size_gen;
+    Ptr<UniformRandomVariable> frame_size_gen = CreateObject<UniformRandomVariable> ();
 
-    frame_size_gen.SetAttribute ("Min", DoubleValue (0));
-    frame_size_gen.SetAttribute ("Max", DoubleValue (
+    frame_size_gen->SetAttribute ("Min", DoubleValue (0));
+    frame_size_gen->SetAttribute ("Max", DoubleValue (
         std::max(
             std::min(2 * avg_packetsize, MPEG_MAX_MESSAGE)
                 - (int) (mpeg_header_tmp.GetSerializedSize()
@@ -268,7 +268,7 @@ namespace ns3
 
     for (uint32_t f_id = 0; f_id < MPEG_FRAMES_PER_SEGMENT; f_id++)
       {
-        uint32_t frame_size = (unsigned) frame_size_gen.GetValue();
+        uint32_t frame_size = (unsigned) frame_size_gen->GetValue();
 
         HTTPHeader http_header;
         http_header.SetMessageType(HTTP_RESPONSE);
