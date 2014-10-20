@@ -140,7 +140,7 @@ main(int argc, char *argv[])
       client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
       client.SetAttribute("window", TimeValue(Time(window)));
-      ApplicationContainer clientApp = client.Install(wifiStaNodes.Get(user));
+      ApplicationContainer clientApp = client.Install(wifiStaNodes.Get(user + 1)); // Node 0 is the server
       clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
 
