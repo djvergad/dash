@@ -128,12 +128,12 @@ main(int argc, char *argv[])
   std::vector<DashClientHelper> clients;
   std::vector<ApplicationContainer> clientApps;
 
-  for (uint32_t user = 1; user <= users; user++)
+  for (uint32_t user = 0; user < users; user++)
     {
       DashClientHelper client("ns3::TcpSocketFactory",
           InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user));
+      client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should positive
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
       client.SetAttribute("window", TimeValue(Time(window)));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
