@@ -159,7 +159,7 @@ namespace ns3
             /*std::cerr << "aft: " << t_60 << std::endl;*/
             if (t_60 > t)
               {
-                delay = Seconds(t_60 - t);
+                // delay = Seconds(t_60 - t);
               }
           }
         /*std::cerr << b_delay.GetSeconds() << std::endl;*/
