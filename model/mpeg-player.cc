@@ -132,10 +132,7 @@ namespace ns3
     /*std::cerr << "res= " << http_header.GetResolution() << " tot="
      << m_totalRate << " played=" << m_framesPlayed << std::endl;*/
 
-    MPEGHeader mpegHeader;
-    m_queue.back()->Copy()->RemoveHeader(mpegHeader);
-
-    Time b_t = GetRealPlayTime(mpegHeader.GetPlaybackTime());
+    Time b_t = GetRealPlayTime(mpeg_header.GetPlaybackTime());
 
     if (m_bufferDelay > Time("0s") && b_t < m_bufferDelay && m_dashClient)
       {
