@@ -168,7 +168,7 @@ main(int argc, char *argv[])
 
   NS_LOG_INFO("Create Applications.");
 
-  std::string protocols[users];
+  std::string *protocols = new std::string[users];
   std::stringstream ss(protocol);
   std::string proto;
   uint32_t protoNum = 0; // The number of protocols (algorithms)
