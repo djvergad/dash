@@ -95,7 +95,8 @@ main(int argc, char *argv[])
   YansWifiPhyHelper phy = YansWifiPhyHelper::Default();
   phy.SetChannel(channel.Create());
 
-  WifiHelper wifi = WifiHelper::Default();
+  //WifiHelper wifi = WifiHelper::Default();//deprecated
+  WifiHelper wifi = WifiHelper();
   wifi.SetRemoteStationManager("ns3::AarfWifiManager");
   NqosWifiMacHelper mac = NqosWifiMacHelper::Default();
 
@@ -118,7 +119,8 @@ main(int argc, char *argv[])
   Ipv4InterfaceContainer interfaces = address.Assign(staDevices);
 
 
-  std::string protocols[users];
+  //std::string protocols[users];//deprecated
+  std::string *protocols = new std::string[users];
   std::stringstream ss(protocol);
   std::string proto;
   uint32_t protoNum = 0; // The number of protocols (algorithms)
