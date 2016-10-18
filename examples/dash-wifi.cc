@@ -119,14 +119,13 @@ main(int argc, char *argv[])
   Ipv4InterfaceContainer interfaces = address.Assign(staDevices);
 
 
-  //std::string protocols[users];//deprecated
-  std::string *protocols = new std::string[users];
+  std::vector<std::string> protocols;
   std::stringstream ss(protocol);
   std::string proto;
   uint32_t protoNum = 0; // The number of protocols (algorithms)
-  while (std::getline(ss, proto, ',') && protoNum < users)
+  while (std::getline(ss, proto, ',') && protoNum++ < users)
     {
-      protocols[protoNum++] = proto;
+      protocols.push_back(proto);
     }
 
   uint16_t port = 80;  // well-known echo port number
