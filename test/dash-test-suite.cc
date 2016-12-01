@@ -51,9 +51,28 @@ DashTestCase1::DoRun (void)
 {
 
   bool tracing = false;
+  //uint32_t maxBytes = 100;
   uint32_t users = 1;
-  double target_dt = 7;
+  double target_dt = 35.0;
   double stopTime = 100.0;
+  std::string linkRate = "500Kbps";
+  std::string delay = "5ms";
+  std::string protocol = "ns3::FdashClient";
+  std::string window = "10s";
+
+  LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
+  LogComponentEnable ("MpegPlayer", LOG_LEVEL_ALL);
+  LogComponentEnable ("HttpParser", LOG_LEVEL_ALL);
+  LogComponentEnable ("MPEGHeader", LOG_LEVEL_ALL);
+  LogComponentEnable ("DashClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("HTTPHeader", LOG_LEVEL_ALL);
+  LogComponentEnable ("SvaaClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("OsmpClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("SftmClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("RaahsClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("AaashClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("FdashClient", LOG_LEVEL_ALL);
+
 
 //
 // Explicitly create the nodes required by the topology (shown above).
@@ -64,8 +83,8 @@ DashTestCase1::DoRun (void)
 // Explicitly create the point-to-point link required by the topology (shown above).
 //
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
-  pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
+  pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
+  pointToPoint.SetChannelAttribute("Delay", StringValue(delay));
   NetDeviceContainer devices;
   devices = pointToPoint.Install(nodes);
 
@@ -84,20 +103,32 @@ DashTestCase1::DoRun (void)
 //
 // Create a BulkSendApplication and install it on node 0
 //
+
+
+  std::vector<std::string> protocols;
+  std::stringstream ss(protocol);
+  std::string proto;
+  uint32_t protoNum = 0; // The number of protocols (algorithms)
+  while (std::getline(ss, proto, ',') && protoNum++ < users)
+    {
+      protocols.push_back(proto);
+    }
+
   uint16_t port = 80;  // well-known echo port number
 
   std::vector<DashClientHelper> clients;
   std::vector<ApplicationContainer> clientApps;
 
-  for (uint32_t user = 1; user <= users; user++)
+  for (uint32_t user = 0; user < users; user++)
     {
       DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port));
+          InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user));
-      client.SetAttribute("window", TimeValue(Seconds(target_dt)));
+      client.SetAttribute("VideoId", UintegerValue(user+1));
+      client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
+      client.SetAttribute("window", TimeValue(Time(window)));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
-      clientApp.Start(Seconds(1.0));
+      clientApp.Start(Seconds(0.25));
       clientApp.Stop(Seconds(stopTime));
 
       clients.push_back(client);
@@ -124,7 +155,7 @@ DashTestCase1::DoRun (void)
 //
 // Now, do the actual simulation.
 //
-  /*Simulator::Stop(Seconds(100.0));*/
+  Simulator::Stop(Seconds(100.0));
   Simulator::Run();
   Simulator::Destroy();
 

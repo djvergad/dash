@@ -64,6 +64,7 @@ namespace ns3
     uint32_t headersize = mpeg_header.GetSerializedSize()
         + http_header.GetSerializedSize();
 
+    NS_LOG_INFO("Bytes = " << bytes);
     if (bytes > 0)
       {
         m_bytes += bytes;
@@ -84,22 +85,38 @@ namespace ns3
         return;
       }
 
+    NS_LOG_INFO("hello world1");
+
     Packet headerPacket(m_buffer, headersize);
     headerPacket.RemoveHeader(mpeg_header);
 
+    NS_LOG_INFO("hello world2");
+
     uint32_t message_size = headersize + mpeg_header.GetSize();
+
+    NS_LOG_INFO("hello world3, m_byes="<< m_bytes<<" message_size="<< message_size );
 
     if (m_bytes < message_size)
       {
         return;
       }
+    NS_LOG_INFO("hello world4");
+
     Packet message(m_buffer, message_size);
+
+    NS_LOG_INFO("hello world5");
 
     memmove(m_buffer, &m_buffer[message_size], m_bytes - message_size);
     m_bytes -= message_size;
 
+    NS_LOG_INFO("hello world6");
+
     m_app->MessageReceived(message);
 
+    NS_LOG_INFO("hello world7");
+
     ReadSocket(socket);
+
+    NS_LOG_INFO("hello world8");
   }
 } // namespace ns3
