@@ -98,7 +98,7 @@ main(int argc, char *argv[])
   //WifiHelper wifi = WifiHelper::Default();//deprecated
   WifiHelper wifi = WifiHelper();
   wifi.SetRemoteStationManager("ns3::AarfWifiManager");
-  NqosWifiMacHelper mac = NqosWifiMacHelper::Default();
+  WifiMacHelper mac;
 
   NetDeviceContainer staDevices;
   staDevices = wifi.Install(phy, mac, wifiStaNodes);
