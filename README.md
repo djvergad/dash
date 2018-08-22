@@ -23,47 +23,39 @@ Installation instructions
 
   1. Install ns3 on you system, using the instructions like from here: https://www.nsnam.org/wiki/Installation#Downloading_ns-3_Using_Mercurial.
   2. Download the module into the `src` directory, with the following commands:
+       ```
+       cd ns-3-dev/
+       cd src/
+       git clone https://github.com/djvergad/dash.git
+       ```
+     A new directory named `dash` should be created in the `src` directory   
     
-    ```
-    cd ns-3-dev/
-    cd src/
-    git clone https://github.com/djvergad/dash.git
-    ```
-    
-    A new directory named `dash` should be created in the `src` directory   
-    
-  3. Re-configure ns3 and enable examples. From the `ns-3-dev` directory, type
-  
-    ```
-    ./waf configure --enable-examples
-    ```
-  4. Now the setup is complete. Validate by running an example:
-  
-    ```
-    ./waf --run 'src/dash/examples/dash-example --users=3 --protocol="ns3::FdashClient" --linkRate=1000Kbps'
-    ```
-    
-    There should be output similar to the following:
-    
-    ```
-    0.829568 Node: 0 newBitRate: 89000 oldBitRate: 45000 estBitRate: 205177 interTime: 0 T: 1.4284 dT: 0 del: +0.0ns
-    0.84288 Node: 1 newBitRate: 89000 oldBitRate: 45000 estBitRate: 197645 interTime: 0 T: 1.42024 dT: 0 del: +0.0ns
-    0.849848 Node: 2 newBitRate: 89000 oldBitRate: 45000 estBitRate: 185404 interTime: 0 T: 1.41842 dT: 0 del: +0.0ns
-    1.40569 Node: 0 newBitRate: 131000 oldBitRate: 89000 estBitRate: 276525 interTime: 0 T: 2.85228 dT: 1.42388 del: +0.0ns
-    1.45575 Node: 1 newBitRate: 131000 oldBitRate: 89000 estBitRate: 261727 interTime: 0 T: 2.80737 dT: 1.38713 del: +0.0ns
-    1.51679 Node: 2 newBitRate: 89000 oldBitRate: 89000 estBitRate: 246766 interTime: 0 T: 2.75148 dT: 1.33306 del: +0.0ns
-    
-    ...
-    
-    95.931 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 427899 interTime: 0 T: 38.3269 dT: 0.175848 del: +0.0ns
-    96.5143 Node: 1 newBitRate: 263000 oldBitRate: 263000 estBitRate: 282589 interTime: 0 T: 37.7488 dT: 0.139504 del: +0.0ns
-    96.9279 Node: 2 newBitRate: 178000 oldBitRate: 178000 estBitRate: 197848 interTime: 0 T: 37.3404 dT: 0.12356 del: +0.0ns
-    97.7929 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 424918 interTime: 0 T: 38.4651 dT: 0.138144 del: +0.0ns
-    98.2967 Node: 1 newBitRate: 263000 oldBitRate: 263000 estBitRate: 275899 interTime: 0 T: 37.9664 dT: 0.217576 del: +0.0ns
-    98.6872 Node: 2 newBitRate: 178000 oldBitRate: 178000 estBitRate: 200443 interTime: 0 T: 37.581 dT: 0.240664 del: +0.0ns
-    99.5082 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 426879 interTime: 0 T: 38.7498 dT: 0.284736 del: +0.0ns
-    ns3::FdashClient-Node: 0 InterruptionTime: 0 interruptions: 0 avgRate: 248101 minRate: 89000 AvgDt: 38.4632 changes: 7
-    ns3::FdashClient-Node: 1 InterruptionTime: 0 interruptions: 0 avgRate: 175772 minRate: 89000 AvgDt: 37.577 changes: 5
-    ns3::FdashClient-Node: 2 InterruptionTime: 0 interruptions: 0 avgRate: 120478 minRate: 89000 AvgDt: 36.4311 changes: 3
-    ```
-    
+  3. Re-configure ns3 and enable examples. From the `ns-3-dev` directory, type:
+       ```
+       ./waf configure --enable-examples
+       ```
+
+  4. Now the setup is complete. Validate by running an example:  
+       ```
+       ./waf --run 'src/dash/examples/dash-example --users=3 --protocol="ns3::FdashClient" --linkRate=1000Kbps'
+       ```
+     There should be output similar to the following:
+       ```
+       0.829568 Node: 0 newBitRate: 89000 oldBitRate: 45000 estBitRate: 205177 interTime: 0 T: 1.4284 dT: 0 del: +0.0ns
+       0.84288 Node: 1 newBitRate: 89000 oldBitRate: 45000 estBitRate: 197645 interTime: 0 T: 1.42024 dT: 0 del: +0.0ns
+       0.849848 Node: 2 newBitRate: 89000 oldBitRate: 45000 estBitRate: 185404 interTime: 0 T: 1.41842 dT: 0 del: +0.0ns
+       1.40569 Node: 0 newBitRate: 131000 oldBitRate: 89000 estBitRate: 276525 interTime: 0 T: 2.85228 dT: 1.42388 del: +0.0ns
+       1.45575 Node: 1 newBitRate: 131000 oldBitRate: 89000 estBitRate: 261727 interTime: 0 T: 2.80737 dT: 1.38713 del: +0.0ns
+       1.51679 Node: 2 newBitRate: 89000 oldBitRate: 89000 estBitRate: 246766 interTime: 0 T: 2.75148 dT: 1.33306 del: +0.0ns
+       ...
+       95.931 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 427899 interTime: 0 T: 38.3269 dT: 0.175848 del: +0.0ns
+       96.5143 Node: 1 newBitRate: 263000 oldBitRate: 263000 estBitRate: 282589 interTime: 0 T: 37.7488 dT: 0.139504 del: +0.0ns
+       96.9279 Node: 2 newBitRate: 178000 oldBitRate: 178000 estBitRate: 197848 interTime: 0 T: 37.3404 dT: 0.12356 del: +0.0ns
+       97.7929 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 424918 interTime: 0 T: 38.4651 dT: 0.138144 del: +0.0ns
+       98.2967 Node: 1 newBitRate: 263000 oldBitRate: 263000 estBitRate: 275899 interTime: 0 T: 37.9664 dT: 0.217576 del: +0.0ns
+       98.6872 Node: 2 newBitRate: 178000 oldBitRate: 178000 estBitRate: 200443 interTime: 0 T: 37.581 dT: 0.240664 del: +0.0ns
+       99.5082 Node: 0 newBitRate: 396000 oldBitRate: 396000 estBitRate: 426879 interTime: 0 T: 38.7498 dT: 0.284736 del: +0.0ns
+       ns3::FdashClient-Node: 0 InterruptionTime: 0 interruptions: 0 avgRate: 248101 minRate: 89000 AvgDt: 38.4632 changes: 7
+       ns3::FdashClient-Node: 1 InterruptionTime: 0 interruptions: 0 avgRate: 175772 minRate: 89000 AvgDt: 37.577 changes: 5
+       ns3::FdashClient-Node: 2 InterruptionTime: 0 interruptions: 0 avgRate: 120478 minRate: 89000 AvgDt: 36.4311 changes: 3
+       ```
