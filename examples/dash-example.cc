@@ -51,8 +51,8 @@ main(int argc, char *argv[])
   std::string window = "10s";
 
   /*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
-  /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
-   LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
+ /* LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
+  LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
 
 //
 // Allow the user to override any of the defaults at
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
       DashClientHelper client("ns3::TcpSocketFactory",
           InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should positive
+      client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
       client.SetAttribute("window", TimeValue(Time(window)));
       ApplicationContainer clientApp = client.Install(nodes.Get(0));

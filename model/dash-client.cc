@@ -102,9 +102,10 @@ namespace ns3
 
     // Create the socket if not already
 
+    NS_LOG_INFO("trying to create connection");
     if (!m_socket)
       {
-
+        NS_LOG_INFO("Just created connection");
         m_socket = Socket::CreateSocket(GetNode(), m_tid);
 
         // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
@@ -132,6 +133,7 @@ namespace ns3
             MakeCallback(&DashClient::ConnectionFailed, this));
         m_socket->SetSendCallback(MakeCallback(&DashClient::DataSend, this));
       }
+    NS_LOG_INFO("Just started connection");
   }
 
   void
