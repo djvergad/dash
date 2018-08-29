@@ -382,14 +382,14 @@ static ns3::GlobalValue g_outdoorUeMaxSpeed ("outdoorUeMaxSpeed",
                                              ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue g_targetDt ("targetDt",
                                     "The target time difference between receiving and playing a frame. [s].",
-                                    ns3::DoubleValue (10.0),
+                                    ns3::DoubleValue (35.0),
                                     ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue g_window ("window",
                                   "The window for measuring the average throughput. [s].",
                                   ns3::DoubleValue (10.0),
                                   ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue g_algorithms ("algorithms",
-                                      "The adaptation protocols used. It can be a comma seperated list of"
+                                      "The adaptation algorithms used. It can be a comma seperated list of"
                                       "protocolos, such as 'ns3::FdashClient,ns3::OsmpClient'."
                                       "You may find the list of available algorithms in src/dash/model/algorithms",
                                   ns3::StringValue ("ns3::FdashClient"),
