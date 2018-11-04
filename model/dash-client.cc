@@ -57,7 +57,7 @@ namespace ns3
             MakeTimeChecker()
 
             ).AddTraceSource("Tx", "A new packet is created and is sent",
-            MakeTraceSourceAccessor(&DashClient::m_txTrace));
+            MakeTraceSourceAccessor(&DashClient::m_txTrace), "ns3::Packet::TracedCallback");
     return tid;
   }
 

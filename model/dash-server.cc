@@ -55,7 +55,7 @@ namespace ns3
             TypeIdValue(UdpSocketFactory::GetTypeId()),
             MakeTypeIdAccessor(&DashServer::m_tid), MakeTypeIdChecker()).AddTraceSource(
             "Rx", "A packet has been received",
-            MakeTraceSourceAccessor(&DashServer::m_rxTrace));
+            MakeTraceSourceAccessor(&DashServer::m_rxTrace), "ns3::Packet::TracedCallback");
     return tid;
   }
 
