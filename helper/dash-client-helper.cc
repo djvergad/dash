@@ -30,55 +30,51 @@ namespace ns3 {
 
 DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address)
 {
-  m_factory.SetTypeId ("ns3::DashClient");
-  m_factory.Set ("Protocol", StringValue (tcpProtocol));
-  m_factory.Set ("Remote", AddressValue (address));
+    m_factory.SetTypeId ("ns3::DashClient");
+    m_factory.Set ("Protocol", StringValue (tcpProtocol));
+    m_factory.Set ("Remote", AddressValue (address));
 }
 
 DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address, std::string algorithm)
 {
-  m_factory.SetTypeId (algorithm);
-  m_factory.Set ("Protocol", StringValue (tcpProtocol));
-  m_factory.Set ("Remote", AddressValue (address));
-}
-void
-DashClientHelper::SetAttribute (std::string name, const AttributeValue &value)
-{
-  m_factory.Set (name, value);
+    m_factory.SetTypeId (algorithm);
+    m_factory.Set ("Protocol", StringValue (tcpProtocol));
+    m_factory.Set ("Remote", AddressValue (address));
 }
 
-ApplicationContainer
-DashClientHelper::Install (Ptr<Node> node) const
+void DashClientHelper::SetAttribute (std::string name, const AttributeValue &value)
 {
-  return ApplicationContainer (InstallPriv (node));
+    m_factory.Set (name, value);
 }
 
-ApplicationContainer
-DashClientHelper::Install (std::string nodeName) const
+ApplicationContainer DashClientHelper::Install (Ptr<Node> node) const
 {
-  Ptr<Node> node = Names::Find<Node> (nodeName);
-  return ApplicationContainer (InstallPriv (node));
+    return ApplicationContainer (InstallPriv (node));
 }
 
-ApplicationContainer
-DashClientHelper::Install (NodeContainer c) const
+ApplicationContainer DashClientHelper::Install (std::string nodeName) const
 {
-  ApplicationContainer apps;
-  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
+    Ptr<Node> node = Names::Find<Node> (nodeName);
+    return ApplicationContainer (InstallPriv (node));
+}
+
+ApplicationContainer DashClientHelper::Install (NodeContainer c) const
+{
+    ApplicationContainer apps;
+    for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
-      apps.Add (InstallPriv (*i));
+        apps.Add (InstallPriv (*i));
     }
 
-  return apps;
+    return apps;
 }
 
-Ptr<Application>
-DashClientHelper::InstallPriv (Ptr<Node> node) const
+Ptr<Application> DashClientHelper::InstallPriv (Ptr<Node> node) const
 {
-  Ptr<Application> app = m_factory.Create<Application> ();
-  node->AddApplication (app);
+    Ptr<Application> app = m_factory.Create<Application> ();
+    node->AddApplication (app);
 
-  return app;
+    return app;
 }
 
 } // namespace ns3

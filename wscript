@@ -25,6 +25,8 @@ def build(bld):
          'helper/dash-server-helper.cc',
 #        'model/dash.cc',
 #        'helper/dash-helper.cc',
+         'model/cache-service-srv.cc',
+         'helper/cache-service-srv-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('dash')
@@ -51,10 +53,11 @@ def build(bld):
          'helper/dash-server-helper.h',
 #        'model/dash.h',
 #        'helper/dash-helper.h',
+         'model/cache-service-srv.h',
+         'helper/cache-service-srv-helper.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
         bld.recurse('examples')
 
     # bld.ns3_python_bindings()
-

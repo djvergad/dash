@@ -162,6 +162,8 @@ namespace ns3
       m_window = time;
     }
 
+    MpdFile mpd;
+
     MpegPlayer m_player;     // The MpegPlayer object
     HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
     Ptr<Socket> m_socket;    // Associated socket
@@ -182,6 +184,8 @@ namespace ns3
     uint32_t m_bitRate;      // The bitrate of the current segment.
     Time m_window;
     Time m_segmentFetchTime;
+    
+    
   };
 
 } // namespace ns3

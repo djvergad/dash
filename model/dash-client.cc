@@ -70,6 +70,7 @@ namespace ns3
   {
     NS_LOG_FUNCTION(this);
     m_parser.SetApp(this); // So the parser knows where to send the received messages
+    
   }
 
   DashClient::~DashClient()
