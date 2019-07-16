@@ -32,16 +32,13 @@ NS_LOG_COMPONENT_DEFINE("DashClient");
 namespace ns3
 {
 
-  NS_OBJECT_ENSURE_REGISTERED(DashClient);
+    NS_OBJECT_ENSURE_REGISTERED(DashClient);
 
-  int DashClient::m_countObjs = 0;
+    int DashClient::m_countObjs = 0;
 
-  TypeId
-  DashClient::GetTypeId(void)
-  {
-    static TypeId tid =
-        TypeId("ns3::DashClient").SetParent<Application>().AddConstructor<
-            DashClient>().AddAttribute("VideoId",
+    TypeId DashClient::GetTypeId(void) {
+        static TypeId tid =
+        TypeId("ns3::DashClient").SetParent<Application>().AddConstructor<DashClient>().AddAttribute("VideoId",
             "The Id of the video that is played.", UintegerValue(0),
             MakeUintegerAccessor(&DashClient::m_videoId),
             MakeUintegerChecker<uint32_t>(1)).AddAttribute("Remote",
@@ -56,179 +53,144 @@ namespace ns3
             TimeValue(Time("10s")), MakeTimeAccessor(&DashClient::m_window),
             MakeTimeChecker()
 
-            ).AddTraceSource("Tx", "A new packet is created and is sent",
-            MakeTraceSourceAccessor(&DashClient::m_txTrace), "ns3::Packet::TracedCallback");
-    return tid;
-  }
+        ).AddTraceSource("Tx", "A new packet is created and is sent",
+        MakeTraceSourceAccessor(&DashClient::m_txTrace), "ns3::Packet::TracedCallback");
+        return tid;
+    }
 
-  DashClient::DashClient() :
+    DashClient::DashClient() :
       m_rateChanges(0), m_target_dt("35s"), m_bitrateEstimate(0.0), m_segmentId(
           0), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
           m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
-          45000), m_window(Seconds(10)), m_segmentFetchTime(Seconds(0))
-  {
-    NS_LOG_FUNCTION(this);
-    m_parser.SetApp(this); // So the parser knows where to send the received messages
-    
-  }
+          45000), m_window(Seconds(10)), m_segmentFetchTime(Seconds(0)) {
+        NS_LOG_FUNCTION(this);
+        m_parser.SetApp(this); // So the parser knows where to send the received messages
+    }
 
-  DashClient::~DashClient()
-  {
-    NS_LOG_FUNCTION(this);
-  }
+    DashClient::~DashClient() {
+        NS_LOG_FUNCTION(this);
+    }
 
-  Ptr<Socket>
-  DashClient::GetSocket(void) const
-  {
-    NS_LOG_FUNCTION(this);
-    return m_socket;
-  }
+    Ptr<Socket> DashClient::GetSocket(void) const {
+        NS_LOG_FUNCTION(this);
+        return m_socket;
+    }
 
-  void
-  DashClient::DoDispose(void)
-  {
-    NS_LOG_FUNCTION(this);
+    void DashClient::DoDispose(void) {
+        NS_LOG_FUNCTION(this);
 
-    m_socket = 0;
-    // chain up
-    Application::DoDispose();
-  }
+        m_socket = 0;
+        // chain up
+        Application::DoDispose();
+    }
 
-// Application Methods
-  void
-  DashClient::StartApplication(void) // Called at time specified by Start
-  {
-    NS_LOG_FUNCTION(this);
+    // Application Methods
+    void DashClient::StartApplication(void) { // Called at time specified by Start
 
-    // Create the socket if not already
+        NS_LOG_FUNCTION(this);
 
-    NS_LOG_INFO("trying to create connection");
-    if (!m_socket)
-      {
-        NS_LOG_INFO("Just created connection");
-        m_socket = Socket::CreateSocket(GetNode(), m_tid);
+        // Create the socket if not already
 
-        // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
-        if (m_socket->GetSocketType() != Socket::NS3_SOCK_STREAM
-            && m_socket->GetSocketType() != Socket::NS3_SOCK_SEQPACKET)
-          {
-            NS_FATAL_ERROR("Using HTTP with an incompatible socket type. "
+        NS_LOG_INFO("trying to create connection");
+        if (!m_socket) {
+            NS_LOG_INFO("Just created connection");
+            m_socket = Socket::CreateSocket(GetNode(), m_tid);
+
+            // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
+            if (m_socket->GetSocketType() != Socket::NS3_SOCK_STREAM
+                && m_socket->GetSocketType() != Socket::NS3_SOCK_SEQPACKET) {
+                NS_FATAL_ERROR("Using HTTP with an incompatible socket type. "
                 "HTTP requires SOCK_STREAM or SOCK_SEQPACKET. "
                 "In other words, use TCP instead of UDP.");
-          }
+            }
 
-        if (Inet6SocketAddress::IsMatchingType(m_peer))
-          {
-            m_socket->Bind6();
-          }
-        else if (InetSocketAddress::IsMatchingType(m_peer))
-          {
-            m_socket->Bind();
-          }
+            if (Inet6SocketAddress::IsMatchingType(m_peer)) {
+                m_socket->Bind6();
+            } else if (InetSocketAddress::IsMatchingType(m_peer)) {
+                m_socket->Bind();
+            }
 
-        m_socket->Connect(m_peer);
-        m_socket->SetRecvCallback(MakeCallback(&DashClient::HandleRead, this));
-        m_socket->SetConnectCallback(
+            m_socket->Connect(m_peer);
+            m_socket->SetRecvCallback(MakeCallback(&DashClient::HandleRead, this));
+            m_socket->SetConnectCallback(
             MakeCallback(&DashClient::ConnectionSucceeded, this),
             MakeCallback(&DashClient::ConnectionFailed, this));
-        m_socket->SetSendCallback(MakeCallback(&DashClient::DataSend, this));
-      }
-    NS_LOG_INFO("Just started connection");
-  }
+            m_socket->SetSendCallback(MakeCallback(&DashClient::DataSend, this));
+        }
+        NS_LOG_INFO("Just started connection");
+    }
 
-  void
-  DashClient::StopApplication(void) // Called at time specified by Stop
-  {
-    NS_LOG_FUNCTION(this);
+    void DashClient::StopApplication(void) { // Called at time specified by Stop
+        NS_LOG_FUNCTION(this);
 
-    if (m_socket != 0)
-      {
-        m_socket->Close();
-        m_connected = false;
-        m_player.m_state = MPEG_PLAYER_DONE;
-      }
-    else
-      {
-        NS_LOG_WARN("DashClient found null socket to close in StopApplication");
-      }
-  }
+        if (m_socket != 0) {
+            m_socket->Close();
+            m_connected = false;
+            m_player.m_state = MPEG_PLAYER_DONE;
+        } else {
+            NS_LOG_WARN("DashClient found null socket to close in StopApplication");
+        }
+    }
 
-// Private helpers
+    // Private helpers
 
-  void
-  DashClient::RequestSegment()
-  {
-    NS_LOG_FUNCTION(this);
+    void
+    DashClient::RequestSegment()
+    {
+        NS_LOG_FUNCTION(this);
 
-    if (m_connected == false)
-      {
-        return;
-      }
+        if (m_connected == false) {
+            return;
+        }
 
-    Ptr<Packet> packet = Create<Packet>(100);
+        Ptr<Packet> packet = Create<Packet>(100);
 
-    HTTPHeader httpHeader;
-    httpHeader.SetSeq(1);
-    httpHeader.SetMessageType(HTTP_REQUEST);
-    httpHeader.SetVideoId(m_videoId);
-    httpHeader.SetResolution(m_bitRate);
-    httpHeader.SetSegmentId(m_segmentId++);
-    packet->AddHeader(httpHeader);
+        HTTPHeader httpHeader;
+        httpHeader.SetSeq(1);
+        httpHeader.SetMessageType(HTTP_REQUEST);
+        httpHeader.SetVideoId(m_videoId);
+        httpHeader.SetResolution(m_bitRate);
+        httpHeader.SetSegmentId(m_segmentId++);
+        packet->AddHeader(httpHeader);
 
-    int res = 0;
-    if (((unsigned) (res = m_socket->Send(packet))) != packet->GetSize())
-      {
-        NS_FATAL_ERROR(
-            "Oh oh. Couldn't send packet! res=" << res << " size=" << packet->GetSize());
-      }
+        int res = 0;
+        if (((unsigned) (res = m_socket->Send(packet))) != packet->GetSize()) {
+            NS_FATAL_ERROR(
+                "Oh oh. Couldn't send packet! res=" << res << " size=" << packet->GetSize());
+        }
 
-    m_requestTime = Simulator::Now();
-    m_segment_bytes = 0;
+        m_requestTime = Simulator::Now();
+        m_segment_bytes = 0;
+    }
 
-  }
+    void DashClient::HandleRead(Ptr<Socket> socket) {
+        NS_LOG_FUNCTION(this << socket);
 
-  void
-  DashClient::HandleRead(Ptr<Socket> socket)
-  {
-    NS_LOG_FUNCTION(this << socket);
+        m_parser.ReadSocket(socket);
+    }
 
-    m_parser.ReadSocket(socket);
+    void DashClient::ConnectionSucceeded(Ptr<Socket> socket) {
+        NS_LOG_FUNCTION(this << socket);
+        NS_LOG_LOGIC("DashClient Connection succeeded");
+        m_connected = true;
+        RequestSegment();
+    }
 
-  }
+    void DashClient::ConnectionFailed(Ptr<Socket> socket) {
+        NS_LOG_FUNCTION(this << socket);NS_LOG_LOGIC(
+            "DashClient, Connection Failed");
+    }
 
-  void
-  DashClient::ConnectionSucceeded(Ptr<Socket> socket)
-  {
-    NS_LOG_FUNCTION(this << socket);
-    NS_LOG_LOGIC("DashClient Connection succeeded");
-    m_connected = true;
-    RequestSegment();
-  }
+    void DashClient::DataSend(Ptr<Socket>, uint32_t) {
+        NS_LOG_FUNCTION(this);
 
-  void
-  DashClient::ConnectionFailed(Ptr<Socket> socket)
-  {
-    NS_LOG_FUNCTION(this << socket);NS_LOG_LOGIC(
-        "DashClient, Connection Failed");
-  }
-
-  void
-  DashClient::DataSend(Ptr<Socket>, uint32_t)
-  {
-    NS_LOG_FUNCTION(this);
-
-    if (m_connected)
-      { // Only send new data if the connection has completed
-
-        NS_LOG_INFO("Something was sent");
-
-      }
-    else
-      {
-        NS_LOG_INFO("NOT CONNECTED!!!!");
-      }
-  }
+        if (m_connected) { // Only send new data if the connection has completed
+            NS_LOG_INFO("Something was sent");
+        } else {
+            NS_LOG_INFO("NOT CONNECTED!!!!");
+        }
+    }
 
   void
   DashClient::MessageReceived(Packet message)
@@ -323,18 +285,13 @@ namespace ns3
 
   }
 
-  void
-  DashClient::CalcNextSegment(uint32_t currRate, uint32_t & nextRate,
-      Time & delay)
-  {
-    nextRate = currRate;
-    delay = Seconds(0);
-  }
+    void DashClient::CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay) {
+        nextRate = currRate;
+        delay = Seconds(0);
+    }
 
-  void
-  DashClient::GetStats()
-  {
-    std::cout << " InterruptionTime: "
+    void DashClient::GetStats() {
+        std::cout << " InterruptionTime: "
         << m_player.m_interruption_time.GetSeconds() << " interruptions: "
         << m_player.m_interrruptions << " avgRate: "
         << (1.0 * m_player.m_totalRate) / m_player.m_framesPlayed
@@ -342,85 +299,66 @@ namespace ns3
         << m_sumDt.GetSeconds() / m_player.m_framesPlayed << " changes: "
         << m_rateChanges << std::endl;
 
-  }
+    }
 
-  void
-  DashClient::LogBufferLevel(Time t)
-  {
-    m_bufferState[Simulator::Now()] = t;
-    for (std::map<Time, Time>::iterator it = m_bufferState.begin();
-        it != m_bufferState.end(); ++it)
-      {
-        if (it->first < (Simulator::Now() - m_window))
-          {
-            m_bufferState.erase(it->first);
-          }
-      }
-  }
+    void DashClient::LogBufferLevel(Time t) {
+        m_bufferState[Simulator::Now()] = t;
+        for (std::map<Time, Time>::iterator it = m_bufferState.begin(); it != m_bufferState.end(); ++it) {
+            if (it->first < (Simulator::Now() - m_window)) {
+                m_bufferState.erase(it->first);
+            }
+        }
+    }
 
-  double
-  DashClient::GetBufferEstimate()
-  {
-    double sum = 0;
-    int count = 0;
-    for (std::map<Time, Time>::iterator it = m_bufferState.begin();
-        it != m_bufferState.end(); ++it)
-      {
-        sum += it->second.GetSeconds();
-        count++;
-      }
-    return sum / count;
-  }
-
-  double
-  DashClient::GetBufferDifferential()
-  {
-    std::map<Time, Time>::iterator it = m_bufferState.end();
-
-    if (it == m_bufferState.begin())
-      {
-        // Empty buffer
-        return 0;
-      }
-    it--;
-    Time last = it->second;
-
-    if (it == m_bufferState.begin())
-      {
-        // Only one element
-        return 0;
-      }
-    it--;
-    Time prev = it->second;
-    return (last - prev).GetSeconds();
-  }
-
-  double
-  DashClient::GetSegmentFetchTime()
-  {
-    return m_segmentFetchTime.GetSeconds();
-  }
-
-  void
-  DashClient::AddBitRate(Time time, double bitrate)
-  {
-    m_bitrates[time] = bitrate;
-    double sum = 0;
-    int count = 0;
-    for (std::map<Time, double>::iterator it = m_bitrates.begin();
-        it != m_bitrates.end(); ++it)
-      {
-        if (it->first < (Simulator::Now() - m_window))
-          {
-            m_bitrates.erase(it->first);
-          }
-        else
-          {
-            sum += it->second;
+    double DashClient::GetBufferEstimate() {
+        double sum = 0;
+        int count = 0;
+        for (std::map<Time, Time>::iterator it = m_bufferState.begin();
+        it != m_bufferState.end(); ++it) {
+            sum += it->second.GetSeconds();
             count++;
-          }
-      }
-    m_bitrateEstimate = sum / count;
-  }
+        }
+        return sum / count;
+    }
+
+    double DashClient::GetBufferDifferential() {
+        std::map<Time, Time>::iterator it = m_bufferState.end();
+
+        if (it == m_bufferState.begin()) {
+            // Empty buffer
+            return 0;
+        }
+        it--;
+        Time last = it->second;
+
+        if (it == m_bufferState.begin()) {
+            // Only one element
+            return 0;
+        }
+        it--;
+        Time prev = it->second;
+        return (last - prev).GetSeconds();
+    }
+
+    double DashClient::GetSegmentFetchTime() {
+        return m_segmentFetchTime.GetSeconds();
+    }
+
+    void DashClient::AddBitRate(Time time, double bitrate)
+    {
+        m_bitrates[time] = bitrate;
+        double sum = 0;
+        int count = 0;
+        for (std::map<Time, double>::iterator it = m_bitrates.begin(); it != m_bitrates.end(); ++it)
+        {
+            if (it->first < (Simulator::Now() - m_window)) {
+                m_bitrates.erase(it->first);
+            } else {
+                sum += it->second;
+                count++;
+            }
+        }
+        m_bitrateEstimate = sum / count;
+    }
 
 } // Namespace ns3
