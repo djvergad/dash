@@ -1,3 +1,4 @@
+
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2014 TEI of Western Macedonia, Greece
@@ -51,7 +52,7 @@ namespace ns3
             "The Address on which to Bind the rx socket.", AddressValue(),
             MakeAddressAccessor(&DashServer::m_local), MakeAddressChecker()).AddAttribute(
             "Protocol", "The type id of the protocol to use for the rx socket.",
-            TypeIdValue(UdpSocketFactory::GetTypeId()),
+            TypeIdValue(TcpSocketFactory::GetTypeId()),
             MakeTypeIdAccessor(&DashServer::m_tid), MakeTypeIdChecker()).AddTraceSource(
             "Rx", "A packet has been received",
             MakeTraceSourceAccessor(&DashServer::m_rxTrace), "ns3::Packet::TracedCallback");
