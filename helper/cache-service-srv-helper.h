@@ -14,7 +14,7 @@
 namespace ns3 {
 
     class CacheServiceHelper {
-        
+
         public:
             /**
             * Create an CacheServiceHelper to make it easier to work with CacheServices
@@ -26,8 +26,8 @@ namespace ns3 {
             * \param address the address of the remote node to send traffic
             *        to.
             */
-CacheServiceHelper (std::string tcpProtocol, Address address);
-          
+            CacheServiceHelper (std::string tcpProtocol, Address address);
+
             /**
             * Create an CacheServiceHelper to make it easier to work with CacheServices
             *
@@ -42,9 +42,9 @@ CacheServiceHelper (std::string tcpProtocol, Address address);
             *        for the next segment.
             */
             CacheServiceHelper (std::string tcpProtocol, Address address, std::string algorithm);
-           
+
             /**
-            * Helper function used to set the underlying application attributes, 
+            * Helper function used to set the underlying application attributes,
             * _not_ the socket attributes.
             *
             * \param name the name of the application attribute to set
@@ -79,12 +79,12 @@ CacheServiceHelper (std::string tcpProtocol, Address address);
             * \returns Container of Ptr to the applications installed.
             */
             ApplicationContainer Install (std::string nodeName) const;
-            
+
         private:
             Ptr<Application> InstallPriv (Ptr<Node> node) const;
             std::string m_protocol;
             Address m_remote;
-            ObjectFactory m_factory;  
+            ObjectFactory m_factory;
     };
 
 } // namespace ns3

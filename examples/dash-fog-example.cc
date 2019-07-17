@@ -26,6 +26,7 @@
 //
 #include <string>
 #include <fstream>
+
 #include "ns3/core-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/internet-module.h"
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
     //
     NS_LOG_INFO("Create nodes.");
     NodeContainer nodes;
-    nodes.Create(2);
+    nodes.Create(3);
 
     NS_LOG_INFO("Create channels.");
 
@@ -149,10 +150,18 @@ int main(int argc, char *argv[]) {
     Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get(1), TcpSocketFactory::GetTypeId ());
 
     DashServerHelper server("ns3::TcpSocketFactory",
-      InetSocketAddress(Ipv4Address::GetAny(), port));
+        InetSocketAddress(Ipv4Address::GetAny(), port));
     ApplicationContainer serverApps = server.Install(nodes.Get(1));
     serverApps.Start(Seconds(0.0));
     serverApps.Stop(Seconds(stopTime + 5.0));
+
+    // TODO
+    // CacheServiceHelper cacheService("ns3::TcpSocketFactory",
+    //     InetSocketAddress(Ipv4Address::GetAny(), port));
+    // ApplicationContainer cacheApp = cacheService.Install(nodes.Get(2));
+    // cacheApp.Start(Seconds(0.0));
+    // cacheApp.Stop(Seconds(stopTime + 5.0));
+
 
     //
     // Set up tracing if enabled

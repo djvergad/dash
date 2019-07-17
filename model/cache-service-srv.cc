@@ -31,34 +31,79 @@ namespace ns3
 
     CacheService::CacheService()
     {
-
+        NS_LOG_FUNCTION(this);
+        m_socket = 0;
+        m_totalRx = 0;
     }
 
     CacheService::~CacheService()
     {
-
+        NS_LOG_FUNCTION(this);
     }
 
-    Ptr<Socket> CacheService::GetListeningSocket(void) const
-    {
-        // NS_LOG_FUNCTION(this);
+    Ptr<Socket> CacheService::GetListeningSocket(void) const {
+        NS_LOG_FUNCTION(this);
         return m_socket;
     }
 
     std::list<Ptr<Socket>> CacheService::GetAcceptedSockets(void) const
     {
-        // NS_LOG_FUNCTION(this);
+        NS_LOG_FUNCTION(this);
         return m_socketList;
     }
 
     void CacheService::DoDispose(void)
     {
-        // NS_LOG_FUNCTION(this);
+        NS_LOG_FUNCTION(this);
         m_socket = 0;
         m_socketList.clear();
 
         // chain up
         Application::DoDispose();
     }
+
+    void CacheService::StartApplication(void) {
+        NS_LOG_FUNCTION(this);
+        // Create the socket if not already
+        if (!m_socket) {
+            m_socket = Socket::CreateSocket(GetNode(), m_tid);
+            m_socket->Bind(m_local);
+            m_socket->Listen();
+            // m_socket->ShutdownSend ();
+        }
+
+        m_socket->SetRecvCallback(MakeCallback(&CacheService::HandleRead, this));
+
+        m_socket->SetAcceptCallback(
+            MakeNullCallback<bool, Ptr<Socket>, const Address &>(),
+            MakeCallback(&CacheService::HandleAccept, this));
+        m_socket->SetCloseCallbacks(
+            MakeCallback(&CacheService::HandlePeerClose, this),
+            MakeCallback(&CacheService::HandlePeerError, this));
+    }
+
+    void CacheService::StopApplication() {    // Called at time specified by Stop
+
+    }
+
+    void CacheService::HandleRead(Ptr<Socket> socket) {
+
+    }
+
+    void CacheService::HandlePeerClose(Ptr<Socket> socket) {
+        NS_LOG_FUNCTION(this << socket);
+    }
+
+    void CacheService::HandlePeerError(Ptr<Socket> socket) {
+        NS_LOG_FUNCTION(this << socket);
+    }
+
+    void CacheService::HandleAccept(Ptr<Socket> s, const Address& from) {
+    }
+
+    void  CacheService::DataSend(Ptr<Socket> socket, uint32_t) {
+    }
+
+
 
 } // namespace ns3

@@ -53,6 +53,7 @@ def build(bld):
 #        'model/dash.h',
 #        'helper/dash-helper.h',
          'model/cache-service-srv.h',
+         'helper/cache-service-srv-helper.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:

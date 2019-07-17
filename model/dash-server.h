@@ -26,6 +26,9 @@
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
 #include "ns3/address.h"
+#include "ns3/socket.h"
+
+#include <ns3/data-rate.h>
 
 // #include "video-stream-dash.h"
 

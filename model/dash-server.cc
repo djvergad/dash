@@ -232,7 +232,7 @@ namespace ns3
         } else {
             f_socket->Bind6();
         }
-        f_socket->Connect();
+        f_socket->Connect(f_peer);
         SendPacket();
     }
 
