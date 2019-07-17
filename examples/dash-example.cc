@@ -38,7 +38,7 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("DashExample");
 
 int main(int argc, char *argv[]) {
-    
+
     bool tracing = false;
     uint32_t maxBytes = 100;
     uint32_t users = 1;
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
 
 
     while (std::getline(ss, proto, ',') && protoNum++ < users) {
-        protocols.push_back(proto); 
+        protocols.push_back(proto);
     }
 
     uint16_t port = 80;  // well-known echo port number
@@ -131,6 +131,8 @@ int main(int argc, char *argv[]) {
     for (uint32_t user = 0; user < users; user++) {
         DashClientHelper client("ns3::TcpSocketFactory",
             InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
+
+        std::cout << "Address=" << i.GetAddress(1) << '\n';
         //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
         client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
         client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));

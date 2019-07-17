@@ -102,19 +102,35 @@ namespace ns3
             void HandlePeerClose(Ptr<Socket>); // Called when the connection is closed by the peer.
             void HandlePeerError(Ptr<Socket>); // Called when there is a peer error
 
-            Ptr<Socket> ConnectFog();
+            Ptr<Socket> ConnectFog(void);
+
+            void initVideoStream(void);
 
             // In the case of TCP, each socket accept returns a new socket, so the
             // listening socket is stored seperately from the accepted sockets
             Ptr<Socket> m_socket;       // Listening socket
             std::list<Ptr<Socket> > m_socketList; //the accepted sockets
 
-            Address m_peer;          // Peer address
-
+            TypeId m_tid;          // Protocol TypeId
             Address m_local;        // Local address to bind to
             uint32_t m_totalRx;      // Total bytes received
-            TypeId m_tid;          // Protocol TypeId
             TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
+
+
+            // Fog Socket Methods
+            void Setup(Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate DataRate);
+
+            void SendPacket(void);
+            void ScheduleTx(void);
+
+            Ptr<Socket> f_socket;
+            Address     f_peer;          // Peer address
+            uint32_t    f_packetSize;
+            uint32_t    f_nPackets;
+            DataRate    f_dataRate;
+            EventId     f_sendEvent;
+            bool        f_connected;
+            uint32_t    f_packetSent;
 
             // A structure that contains the generated MPEG frames, for each client.
             std::map<Ptr<Socket>, std::queue<Packet> > m_queues;

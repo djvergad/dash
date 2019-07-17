@@ -47,8 +47,8 @@ namespace ns3
 
     TypeId DashServer::GetTypeId(void) {
         static TypeId tid =
-        TypeId("ns3::DashServer").SetParent<Application>().AddConstructor<
-            DashServer>().AddAttribute("Local",
+        TypeId("ns3::DashServer").SetParent<Application>().AddConstructor<DashServer>()
+            .AddAttribute("Local",
             "The Address on which to Bind the rx socket.", AddressValue(),
             MakeAddressAccessor(&DashServer::m_local), MakeAddressChecker()).AddAttribute(
             "Protocol", "The type id of the protocol to use for the rx socket.",
@@ -179,18 +179,23 @@ namespace ns3
 
         Ptr<Socket> fog = ConnectFog();
 
-        // initVideoStream(fog.getSocketId());
+        initVideoStream();
 
         // this->streams[fog.getSocketId()].fogsocket = fog;
         // this->nodeMap[fog.getSocketId()] = NodeType::Fog;
         // cout << "VIDEO STREAM CREATED | USER=" << connId << ", FOG=" << fog.getSocketId() << endl;
     }
 
-    Ptr<Socket> DashServer::ConnectFog() {
+    Ptr<Socket> DashServer::ConnectFog(void) {
         Ptr<Socket> fognode;
 
-        NS_LOG_INFO("Just created connection");
-        fognode = Socket::CreateSocket(GetNode(), m_tid);
+        NS_LOG_INFO("Just created fog connection");
+
+        std::cout << "[Cloude Node] Just created fog connection" << '\n';
+
+        TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
+
+        fognode = Socket::CreateSocket(GetNode(), tid);
 
         // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
         if (fognode->GetSocketType() != Socket::NS3_SOCK_STREAM
@@ -200,13 +205,14 @@ namespace ns3
             "In other words, use TCP instead of UDP.");
         }
 
-        if (Inet6SocketAddress::IsMatchingType(m_peer)) {
+        if (Inet6SocketAddress::IsMatchingType(f_peer)) {
             fognode->Bind6();
-        } else if (InetSocketAddress::IsMatchingType(m_peer)) {
+        } else if (InetSocketAddress::IsMatchingType(f_peer)) {
             fognode->Bind();
         }
 
-        fognode->Connect(m_peer);
+        fognode->Connect(f_peer);
+
         // fognode->SetRecvCallback(MakeCallback(&DashClient::HandleRead, this));
         // fognode->SetConnectCallback(
         //     MakeCallback(&DashClient::ConnectionSucceeded, this),
@@ -214,6 +220,28 @@ namespace ns3
         // fognode->SetSendCallback(MakeCallback(&DashClient::DataSend, this));
 
         return fognode;
+    }
+
+    void DashServer::initVideoStream(void) {
+        VideoStreamDash vsm;
+
+        f_connected = true;
+        f_packetSent = 0;
+        if(InetSocketAddress::IsMatchingType(f_peer)){
+            f_socket->Bind();
+        } else {
+            f_socket->Bind6();
+        }
+        f_socket->Connect();
+        SendPacket();
+    }
+
+    void DashServer::SendPacket(void) {
+        Ptr<Packet> packet = Create<Packet>(f_packetSize);
+
+        f_socket->Send(packet);
+
+
     }
 
     void  DashServer::DataSend(Ptr<Socket> socket, uint32_t) {
