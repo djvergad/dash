@@ -15,24 +15,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Dimitrios J. Vergados <djvergad@gmail.com>
+ * Author: Eduardo S. Gama <eduardogama72@gmail.com>
  */
 
-// Network topology
-//
-//      n0 ------ n1 ----- n2
-//            500 Kbps
-//              5 ms
-//
 #include <string>
 #include <fstream>
-
 #include "ns3/core-module.h"
+#include "ns3/csma-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/network-module.h"
 #include "ns3/dash-module.h"
+
+
+// Default Network Topology
+//
+//       10.1.1.0
+// n0 -------------- n1   n2   n3   n4
+//    point-to-point  |    |    |    |
+//                    ================
+//                      LAN 10.1.2.0
 
 using namespace ns3;
 
@@ -50,11 +53,12 @@ int main(int argc, char *argv[]) {
     std::string protocol = "ns3::DashClient";
     std::string window = "10s";
 
-  /*
-   * LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);
-   * LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
-   * LogComponentEnable ("DashClient", LOG_LEVEL_ALL);
-   */
+
+    // MpdFileHandler *mpd_instance = MpdFileHandler::getInstance();
+
+  /*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
+//    LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
+//    LogComponentEnable ("DashClient", LOG_LEVEL_ALL);
 
     //
     // Allow the user to override any of the defaults at
@@ -87,12 +91,15 @@ int main(int argc, char *argv[]) {
     // Explicitly create the nodes required by the topology (shown above).
     //
     NS_LOG_INFO("Create nodes.");
-    NodeContainer n0n1;
-    n0n1.Create(2);
 
-    NodeContainer n1n2;
-    n1n2.Add(n0n1.Get(1));
-    n1n2.Create(1);
+    NodeContainer p2pNodes;
+    p2pNodes.Create(2);
+
+    NodeContainer csmaNodes;
+    csmaNodes.Add(p2pNodes.Get(1));
+    csmaNodes.Create(1);
+    // node2.Add(node1.Get(1));
+    // node2.Create(1);
 
     NS_LOG_INFO("Create channels.");
 
@@ -103,30 +110,28 @@ int main(int argc, char *argv[]) {
     pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
     pointToPoint.SetChannelAttribute("Delay", StringValue(delay));
 
-    NetDeviceContainer dev0 = pointToPoint.Install(n0n1);
-    NetDeviceContainer dev1 = pointToPoint.Install(n1n2);
+    NetDeviceContainer p2pDevices;
+    p2pDevices = pointToPoint.Install(p2pNodes);
 
-    //
-    // Install the internet stack on the nodes
-    //
-    InternetStackHelper internet;
-    // internet.Install(n0n1);
-    // internet.Install(n1n2);
-    internet.InstallAll();
-    
-    //
-    // We've got the "hardware" in place.  Now we need to add IP addresses.
-    //
-    NS_LOG_INFO("Assign IP Addresses.");
-    Ipv4AddressHelper ipv4;
-    ipv4.SetBase("10.1.1.0", "255.255.255.0");
+    CsmaHelper csma;
+    csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
+    csma.SetChannelAttribute ("Delay", TimeValue (NanoSeconds (6560)));
 
-    Ipv4InterfaceContainer ip0 = ipv4.Assign(dev0);
-    Ipv4InterfaceContainer ip1 = ipv4.Assign(dev1);
+    NetDeviceContainer csmaDevices;
+    csmaDevices = csma.Install (csmaNodes);
 
-    // and setup ip routing tables to get total ip-level connectivity.
-    // Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+    InternetStackHelper stack;
+    stack.Install (p2pNodes.Get (0));
+    stack.Install (csmaNodes);
 
+    Ipv4AddressHelper address;
+    address.SetBase ("10.1.1.0", "255.255.255.0");
+    Ipv4InterfaceContainer p2pInterfaces;
+    p2pInterfaces = address.Assign (p2pDevices);
+
+    address.SetBase ("10.1.2.0", "255.255.255.0");
+    Ipv4InterfaceContainer csmaInterfaces;
+    csmaInterfaces = address.Assign (csmaDevices);
 
     NS_LOG_INFO("Create Applications.");
 
@@ -135,28 +140,28 @@ int main(int argc, char *argv[]) {
     std::string proto;
     uint32_t protoNum = 0; // The number of protocols (algorithms)
 
+
     while (std::getline(ss, proto, ',') && protoNum++ < users) {
         protocols.push_back(proto);
     }
 
     uint16_t port = 80;  // well-known echo port number
-
-
+    // uint16_t port_client = 1000;
     std::vector<DashClientHelper> clients;
     std::vector<ApplicationContainer> clientApps;
 
     for (uint32_t user = 0; user < users; user++) {
-
         DashClientHelper client("ns3::TcpSocketFactory",
-            InetSocketAddress(ip1.GetAddress(1), port), protocols[user % protoNum]);
+            InetSocketAddress(p2pInterfaces.GetAddress(0), port),
+            InetSocketAddress(p2pInterfaces.GetAddress(1), port),
+            protocols[user % protoNum]);
 
-        std::cout << "Address=" << ip1.GetAddress(1) << '\n';
+        std::cout << "Address=" << p2pInterfaces.GetAddress(1) << '\n';
         //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
         client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
         client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
         client.SetAttribute("window", TimeValue(Time(window)));
-
-        ApplicationContainer clientApp = client.Install(n0n1.Get(0));
+        ApplicationContainer clientApp = client.Install(csmaNodes.Get(1));
         clientApp.Start(Seconds(0.25));
         clientApp.Stop(Seconds(stopTime));
 
@@ -164,30 +169,33 @@ int main(int argc, char *argv[]) {
         clientApps.push_back(clientApp);
     }
 
-    // Building fog nodes connections
-    // Ptr<Socket> fogsocket = Socket::CreateSocket (n1n2.Get(1), TcpSocketFactory::GetTypeId ());
-
-
     DashServerHelper server("ns3::TcpSocketFactory",
-        InetSocketAddress(Ipv4Address::GetAny(), port));
-    ApplicationContainer serverApps = server.Install(n1n2.Get(1));
+      InetSocketAddress(Ipv4Address::GetAny(), port));
+
+    ApplicationContainer serverApps = server.Install(p2pNodes.Get(0));
     serverApps.Start(Seconds(0.0));
     serverApps.Stop(Seconds(stopTime + 5.0));
 
 
-    //
-    // // TODO
-    // // Create and bind the socket...
-    // Ptr<Socket> localSocket = Socket::CreateSocket (n1n2.Get(2), TcpSocketFactory::GetTypeId ());
-    // localSocket->Bind ();
-    //
-    // CacheServiceHelper cacheService("ns3::TcpSocketFactory",
-    //     InetSocketAddress(Ipv4Address::GetAny(), port));
-    // ApplicationContainer cacheApp = cacheService.Install(nodes.Get(2));
-    // cacheApp.Start(Seconds(0.0));
-    // cacheApp.Stop(Seconds(stopTime + 5.0));
+    // Building fog nodes connections
+    CacheServiceHelper cache("ns3::TcpSocketFactory",
+        InetSocketAddress(p2pInterfaces.GetAddress(1), port),     // Fog node which will be a Socket server
+        InetSocketAddress(p2pInterfaces.GetAddress(0), port));    // Fog node which will be a Socket client
 
+    // Ptr<Socket> ns3TcpSocket = Socket::CreateSocket(nodes.Get(0), TcpSocketFactory::GetTypeId ());
+
+    // Ptr<CacheService> app = CreateObject<CacheService>();
+    // app->Setup(ns3TcpSocket, sinkAddress, 1040, 1000, DataRate ("1Mbps"));
+
+    ApplicationContainer cacheApp = cache.Install(p2pNodes.Get(1));
+    cacheApp.Start(Seconds(0.0));
+    cacheApp.Stop(Seconds(stopTime + 5.0));
+
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+
+    //
     // Set up tracing if enabled
+    //
     if (tracing) {
         AsciiTraceHelper ascii;
         pointToPoint.EnableAsciiAll(ascii.CreateFileStream("dash-send.tr"));
@@ -211,6 +219,6 @@ int main(int argc, char *argv[]) {
         app->GetStats();
     }
 
-  return 0;
+    return 0;
 
 }

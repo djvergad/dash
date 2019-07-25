@@ -7,19 +7,20 @@
 
 
 namespace ns3 {
-    
-    CacheServiceHelper::CacheServiceHelper(std::string tcpProtocol, Address address)
+
+    CacheServiceHelper::CacheServiceHelper(std::string protocol, Address address)
     {
-        m_factory.SetTypeId ("ns3::DashClient");
-        m_factory.Set ("Protocol", StringValue (tcpProtocol));
+        m_factory.SetTypeId ("ns3::CacheService");
+        m_factory.Set ("Protocol", StringValue (protocol));
         m_factory.Set ("Remote", AddressValue (address));
     }
 
-    CacheServiceHelper::CacheServiceHelper(std::string tcpProtocol, Address address, std::string algorithm)
+    CacheServiceHelper::CacheServiceHelper (std::string protocol, Address server_address, Address connection_address)
     {
-        m_factory.SetTypeId (algorithm);
-        m_factory.Set ("Protocol", StringValue (tcpProtocol));
-        m_factory.Set ("Remote", AddressValue (address));
+        m_factory.SetTypeId ("ns3::CacheService");
+        m_factory.Set ("Protocol", StringValue (protocol));
+        m_factory.Set ("Local", AddressValue (server_address));
+        m_factory.Set ("Remote", AddressValue (connection_address));
     }
 
     void CacheServiceHelper::SetAttribute (std::string name, const AttributeValue &value)

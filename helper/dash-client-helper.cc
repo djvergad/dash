@@ -42,6 +42,14 @@ DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address, st
     m_factory.Set ("Remote", AddressValue (address));
 }
 
+DashClientHelper::DashClientHelper (std::string tcpProtocol, Address address, Address fog_address, std::string algorithm)
+{
+    m_factory.SetTypeId (algorithm);
+    m_factory.Set ("Protocol", StringValue (tcpProtocol));
+    m_factory.Set ("Remote", AddressValue (address));
+    m_factory.Set ("FogRemote", AddressValue (fog_address));
+}
+
 void DashClientHelper::SetAttribute (std::string name, const AttributeValue &value)
 {
     m_factory.Set (name, value);

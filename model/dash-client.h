@@ -139,12 +139,20 @@ namespace ns3
             m_window = time;
         }
 
+        void ConnectToFog();
+        void ConnectionFogSucceeded(Ptr<Socket> socket);
+        void ConnectionFogFailed(Ptr<Socket> socket);
+
+
         MpegPlayer m_player;     // The MpegPlayer object
-        HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
+        HttpParser m_parser;     // An HttpParser object for parsing the incoming stream into http messages
         Ptr<Socket> m_socket;    // Associated socket
         Address m_peer;          // Peer address
         bool m_connected;        // True if connected
         uint32_t m_totBytes;     // Total bytes received.
+
+        Ptr<Socket> m_fog_socket;    // Fog Associated socket
+        Address m_fog_peer;          // Fog Peer address
 
         TypeId m_tid;
         TracedCallback<Ptr<const Packet> > m_txTrace;

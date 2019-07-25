@@ -26,6 +26,8 @@ def build(bld):
 #        'model/dash.cc',
 #        'helper/dash-helper.cc',
          'model/cache-service-srv.cc',
+         'helper/cache-service-srv-helper.cc',
+         'model/mpd-file-handler.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('dash')
@@ -54,6 +56,7 @@ def build(bld):
 #        'helper/dash-helper.h',
          'model/cache-service-srv.h',
          'helper/cache-service-srv-helper.h',
+         'model/mpd-file-handler.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:

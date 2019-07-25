@@ -3,6 +3,10 @@
 #ifndef CACHE_SERVICE_SRV_H
 #define CACHE_SERVICE_SRV_H
 
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
+
 #include "ns3/application.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
@@ -27,6 +31,8 @@ namespace ns3
 
             CacheService();
             ~CacheService();
+
+            void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
 
             /**
              * \return pointer to listening socket
@@ -55,19 +61,32 @@ namespace ns3
             void HandlePeerClose(Ptr<Socket>); // Called when the connection is closed by the peer.
             void HandlePeerError(Ptr<Socket>); // Called when there is a peer error
 
+            void ConnetClientToCloud();
 
             // In the case of TCP, each socket accept returns a new socket, so the
             // listening socket is stored seperately from the accepted sockets
-            Ptr<Socket> m_socket;       // Listening socket
+            Ptr<Socket> m_socket;    // Listening socket
             std::list<Ptr<Socket> > m_socketList; //the accepted sockets
 
-            Address m_local;        // Local address to bind to
-            uint32_t m_totalRx;      // Total bytes received
+            Ptr<Socket> client_socket;  // Associated Socket
+
+            Address m_peer;        // Peer address
+
+            Address m_local;       // Local address to bind to
+
+
+            uint32_t m_fog_segmentId;    // The id of the current segment
+
+            uint32_t m_totalRx;    // Total bytes received
             TypeId m_tid;          // Protocol TypeId
             TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
+            TracedCallback<Ptr<const Packet> > m_txTrace;
 
             // A structure that contains the generated MPEG frames, for each client.
             std::map<Ptr<Socket>, std::queue<Packet>> m_queues;
+
+            Time m_window;
+
     };
 
 }// namespace ns3

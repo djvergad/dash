@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Building fog nodes connections
-    Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get(1), TcpSocketFactory::GetTypeId ());
+    // Ptr<Socket> ns3TcpSocket = Socket::CreateSocket (nodes.Get(1), TcpSocketFactory::GetTypeId ());
 
     DashServerHelper server("ns3::TcpSocketFactory",
       InetSocketAddress(Ipv4Address::GetAny(), port));

@@ -26,7 +26,7 @@ namespace ns3 {
             * \param address the address of the remote node to send traffic
             *        to.
             */
-            CacheServiceHelper (std::string tcpProtocol, Address address);
+            CacheServiceHelper (std::string protocol, Address address);
 
             /**
             * Create an CacheServiceHelper to make it easier to work with CacheServices
@@ -41,7 +41,7 @@ namespace ns3 {
             *        Client to determine the resolution and the delay for the request
             *        for the next segment.
             */
-            CacheServiceHelper (std::string tcpProtocol, Address address, std::string algorithm);
+            CacheServiceHelper (std::string protocol, Address c_address, Address s_address);
 
             /**
             * Helper function used to set the underlying application attributes,

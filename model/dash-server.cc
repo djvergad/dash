@@ -177,9 +177,9 @@ namespace ns3
 
         this->nodeMap[s] = NodeType::User;
 
-        Ptr<Socket> fog = ConnectFog();
+        // Ptr<Socket> fog = ConnectFog();
 
-        initVideoStream();
+        // initVideoStream();
 
         // this->streams[fog.getSocketId()].fogsocket = fog;
         // this->nodeMap[fog.getSocketId()] = NodeType::Fog;
@@ -240,8 +240,6 @@ namespace ns3
         Ptr<Packet> packet = Create<Packet>(f_packetSize);
 
         f_socket->Send(packet);
-
-
     }
 
     void  DashServer::DataSend(Ptr<Socket> socket, uint32_t) {
@@ -285,8 +283,8 @@ namespace ns3
 
         Ptr<UniformRandomVariable> frame_size_gen = CreateObject<UniformRandomVariable> ();
 
-        frame_size_gen->SetAttribute ("Min", DoubleValue (0));
-        frame_size_gen->SetAttribute ("Max", DoubleValue (
+        frame_size_gen->SetAttribute ("Min", DoubleValue(0));
+        frame_size_gen->SetAttribute ("Max", DoubleValue(
             std::max(
             std::min(2 * avg_packetsize, MPEG_MAX_MESSAGE)
             - (int) (mpeg_header_tmp.GetSerializedSize()
