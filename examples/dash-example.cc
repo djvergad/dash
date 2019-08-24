@@ -35,10 +35,10 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("DashExample");
+NS_LOG_COMPONENT_DEFINE ("DashExample");
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
   bool tracing = false;
   uint32_t maxBytes = 100;
@@ -52,140 +52,132 @@ main(int argc, char *argv[])
   std::string window = "10s";
 
   /*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
- /* LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
+  /* LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
   LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
 
-//
-// Allow the user to override any of the defaults at
-// run-time, via command-line arguments
-//
+  //
+  // Allow the user to override any of the defaults at
+  // run-time, via command-line arguments
+  //
   CommandLine cmd;
-  cmd.AddValue("tracing", "Flag to enable/disable tracing", tracing);
-  cmd.AddValue("maxBytes", "Total number of bytes for application to send",
-      maxBytes);
-  cmd.AddValue("users", "The number of concurrent videos", users);
-  cmd.AddValue("targetDt",
-      "The target time difference between receiving and playing a frame.",
-      target_dt);
-  cmd.AddValue("stopTime",
-      "The time when the clients will stop requesting segments", stopTime);
-  cmd.AddValue("linkRate",
-      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
-      linkRate);
-  cmd.AddValue("delay",
-      "The delay of the link connecting the clients to the server (e.g. 5ms)",
-      delay);
-  cmd.AddValue("algorithms",
-      "The adaptation algorithms used. It can be a comma seperated list of"
-      "protocolos, such as 'ns3::FdashClient,ns3::OsmpClient'."
-      "You may find the list of available algorithms in src/dash/model/algorithms",
-      algorithm);
-  cmd.AddValue("bufferSpace",
-      "The space in bytes that is used for buffering the video",
-      bufferSpace);
-  cmd.AddValue("window",
-      "The window for measuring the average throughput (Time).", window);
-  cmd.Parse(argc, argv);
+  cmd.AddValue ("tracing", "Flag to enable/disable tracing", tracing);
+  cmd.AddValue ("maxBytes", "Total number of bytes for application to send", maxBytes);
+  cmd.AddValue ("users", "The number of concurrent videos", users);
+  cmd.AddValue ("targetDt", "The target time difference between receiving and playing a frame.",
+                target_dt);
+  cmd.AddValue ("stopTime", "The time when the clients will stop requesting segments", stopTime);
+  cmd.AddValue ("linkRate",
+                "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
+                linkRate);
+  cmd.AddValue ("delay", "The delay of the link connecting the clients to the server (e.g. 5ms)",
+                delay);
+  cmd.AddValue ("algorithms",
+                "The adaptation algorithms used. It can be a comma seperated list of"
+                "protocolos, such as 'ns3::FdashClient,ns3::OsmpClient'."
+                "You may find the list of available algorithms in src/dash/model/algorithms",
+                algorithm);
+  cmd.AddValue ("bufferSpace", "The space in bytes that is used for buffering the video",
+                bufferSpace);
+  cmd.AddValue ("window", "The window for measuring the average throughput (Time).", window);
+  cmd.Parse (argc, argv);
 
-//
-// Explicitly create the nodes required by the topology (shown above).
-//
-  NS_LOG_INFO("Create nodes.");
+  //
+  // Explicitly create the nodes required by the topology (shown above).
+  //
+  NS_LOG_INFO ("Create nodes.");
   NodeContainer nodes;
-  nodes.Create(2);
+  nodes.Create (2);
 
-  NS_LOG_INFO("Create channels.");
+  NS_LOG_INFO ("Create channels.");
 
-//
-// Explicitly create the point-to-point link required by the topology (shown above).
-//
+  //
+  // Explicitly create the point-to-point link required by the topology (shown above).
+  //
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue(linkRate));
-  pointToPoint.SetChannelAttribute("Delay", StringValue(delay));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (linkRate));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue (delay));
   NetDeviceContainer devices;
-  devices = pointToPoint.Install(nodes);
+  devices = pointToPoint.Install (nodes);
 
-//
-// Install the internet stack on the nodes
-//
+  //
+  // Install the internet stack on the nodes
+  //
   InternetStackHelper internet;
-  internet.Install(nodes);
+  internet.Install (nodes);
 
-//
-// We've got the "hardware" in place.  Now we need to add IP addresses.
-//
-  NS_LOG_INFO("Assign IP Addresses.");
+  //
+  // We've got the "hardware" in place.  Now we need to add IP addresses.
+  //
+  NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
-  ipv4.SetBase("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign(devices);
+  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+  Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
-  NS_LOG_INFO("Create Applications.");
+  NS_LOG_INFO ("Create Applications.");
 
   std::vector<std::string> algorithms;
-  std::stringstream ss(algorithm);
+  std::stringstream ss (algorithm);
   std::string proto;
   uint32_t protoNum = 0; // The number of algorithms
-  while (std::getline(ss, proto, ',') && protoNum++ < users)
+  while (std::getline (ss, proto, ',') && protoNum++ < users)
     {
-      algorithms.push_back(proto);
+      algorithms.push_back (proto);
     }
 
-  uint16_t port = 80;  // well-known echo port number
+  uint16_t port = 80; // well-known echo port number
   std::vector<DashClientHelper> clients;
   std::vector<ApplicationContainer> clientApps;
 
   for (uint32_t user = 0; user < users; user++)
     {
-      DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port), algorithms[user % protoNum]);
+      DashClientHelper client ("ns3::TcpSocketFactory", InetSocketAddress (i.GetAddress (1), port),
+                               algorithms[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
-      client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
-      client.SetAttribute("window", TimeValue(Time(window)));
-      client.SetAttribute("bufferSpace", UintegerValue(bufferSpace));
+      client.SetAttribute ("VideoId", UintegerValue (user + 1)); // VideoId should be positive
+      client.SetAttribute ("TargetDt", TimeValue (Seconds (target_dt)));
+      client.SetAttribute ("window", TimeValue (Time (window)));
+      client.SetAttribute ("bufferSpace", UintegerValue (bufferSpace));
 
-      ApplicationContainer clientApp = client.Install(nodes.Get(0));
-      clientApp.Start(Seconds(0.25));
-      clientApp.Stop(Seconds(stopTime));
+      ApplicationContainer clientApp = client.Install (nodes.Get (0));
+      clientApp.Start (Seconds (0.25));
+      clientApp.Stop (Seconds (stopTime));
 
-      clients.push_back(client);
-      clientApps.push_back(clientApp);
-
+      clients.push_back (client);
+      clientApps.push_back (clientApp);
     }
 
-  DashServerHelper server("ns3::TcpSocketFactory",
-      InetSocketAddress(Ipv4Address::GetAny(), port));
-  ApplicationContainer serverApps = server.Install(nodes.Get(1));
-  serverApps.Start(Seconds(0.0));
-  serverApps.Stop(Seconds(stopTime + 5.0));
+  DashServerHelper server ("ns3::TcpSocketFactory",
+                           InetSocketAddress (Ipv4Address::GetAny (), port));
+  ApplicationContainer serverApps = server.Install (nodes.Get (1));
+  serverApps.Start (Seconds (0.0));
+  serverApps.Stop (Seconds (stopTime + 5.0));
 
-//
-// Set up tracing if enabled
-//
+  //
+  // Set up tracing if enabled
+  //
   if (tracing)
     {
       AsciiTraceHelper ascii;
-      pointToPoint.EnableAsciiAll(ascii.CreateFileStream("dash-send.tr"));
-      pointToPoint.EnablePcapAll("dash-send", false);
+      pointToPoint.EnableAsciiAll (ascii.CreateFileStream ("dash-send.tr"));
+      pointToPoint.EnablePcapAll ("dash-send", false);
     }
 
-//
-// Now, do the actual simulation.
-//
-  NS_LOG_INFO("Run Simulation.");
+  //
+  // Now, do the actual simulation.
+  //
+  NS_LOG_INFO ("Run Simulation.");
   /*Simulator::Stop(Seconds(100.0));*/
-  Simulator::Run();
-  Simulator::Destroy();
-  NS_LOG_INFO("Done.");
+  Simulator::Run ();
+  Simulator::Destroy ();
+  NS_LOG_INFO ("Done.");
 
   uint32_t k;
   for (k = 0; k < users; k++)
     {
-      Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
+      Ptr<DashClient> app = DynamicCast<DashClient> (clientApps[k].Get (0));
       std::cout << algorithms[k % protoNum] << "-Node: " << k;
-      app->GetStats();
+      app->GetStats ();
     }
 
   return 0;
-
 }

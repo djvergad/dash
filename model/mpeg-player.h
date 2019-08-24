@@ -26,75 +26,64 @@
 #include "ns3/ptr.h"
 #include "ns3/packet.h"
 
-namespace ns3
+namespace ns3 {
+enum { MPEG_PLAYER_PAUSED, MPEG_PLAYER_PLAYING, MPEG_PLAYER_NOT_STARTED, MPEG_PLAYER_DONE };
+
+class DashClient;
+
+class FrameBuffer
 {
-  enum
+public:
+  FrameBuffer (uint32_t &capasity);
+  bool push (Ptr<Packet> frame);
+  Ptr<Packet> pop ();
+  int size ();
+  bool empty ();
+
+private:
+  uint32_t &m_capacity;
+  uint32_t m_size_in_bytes = 0;
+  std::queue<Ptr<Packet>> m_queue;
+};
+
+class MpegPlayer
+{
+public:
+  MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capasity);
+
+  virtual ~MpegPlayer ();
+
+  bool ReceiveFrame (Ptr<Packet> message);
+
+  int GetQueueSize ();
+
+  void Start ();
+
+  Time GetRealPlayTime (Time playTime);
+
+  void inline SchduleBufferWakeup (const Time t, DashClient *client)
   {
-    MPEG_PLAYER_PAUSED, MPEG_PLAYER_PLAYING, MPEG_PLAYER_NOT_STARTED, MPEG_PLAYER_DONE
-  };
+    m_bufferDelay = t;
+    m_dashClient = client;
+  }
 
-  class DashClient;
+  int m_state;
+  Time m_interruption_time;
+  int m_interrruptions;
 
-  class FrameBuffer
-  {
-  public:
-    FrameBuffer(uint32_t& capasity);
-    bool push(Ptr<Packet> frame);
-    Ptr<Packet> pop();
-    int size();
-    bool empty();
+  Time m_start_time;
+  uint64_t m_totalRate;
+  uint32_t m_minRate;
+  uint32_t m_framesPlayed;
 
-  private:
-    uint32_t& m_capacity;
-    uint32_t m_size_in_bytes = 0;
-    std::queue<Ptr<Packet> > m_queue;
-  };
+private:
+  void PlayFrame ();
 
-  class MpegPlayer
-  {
-  public:
-    MpegPlayer(Ptr<DashClient> dashClient, uint32_t& capasity);
-
-    virtual
-    ~MpegPlayer();
-
-    bool
-    ReceiveFrame(Ptr<Packet> message);
-
-    int
-    GetQueueSize();
-
-    void
-    Start();
-
-    Time
-    GetRealPlayTime(Time playTime);
-
-    void inline
-    SchduleBufferWakeup(const Time t, DashClient * client)
-    {
-      m_bufferDelay = t;
-      m_dashClient = client;
-    }
-
-    int m_state;
-    Time m_interruption_time;
-    int m_interrruptions;
-
-    Time m_start_time;
-    uint64_t m_totalRate;
-    uint32_t m_minRate;
-    uint32_t m_framesPlayed;
-
-  private:
-    void
-    PlayFrame();
-
-    Time m_lastpaused;
-    FrameBuffer m_frameBuffer;
-    Time m_bufferDelay;
-    Ptr<DashClient> m_dashClient;
-  };
+  Time m_lastpaused;
+  FrameBuffer m_frameBuffer;
+  Time m_bufferDelay;
+  Ptr<DashClient> m_dashClient;
+};
 } // namespace ns3
 
 #endif /* MPEG_PLAYER_H_ */

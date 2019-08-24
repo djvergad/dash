@@ -66,7 +66,7 @@ public:
     *        Client to determine the resolution and the delay for the request
     *        for the next segment.
     */
-   DashClientHelper (std::string tcpProtocol, Address address, std::string algorithm);
+  DashClientHelper (std::string tcpProtocol, Address address, std::string algorithm);
 
   /**
    * Helper function used to set the underlying application attributes, 
@@ -123,4 +123,3 @@ private:
 } // namespace ns3
 
 #endif /* ON_OFF_HELPER_H */
-

@@ -28,91 +28,92 @@
 #include "mpeg-header.h"
 #include "dash-client.h"
 
-NS_LOG_COMPONENT_DEFINE("HttpParser");
+NS_LOG_COMPONENT_DEFINE ("HttpParser");
 
-namespace ns3
+namespace ns3 {
+
+HttpParser::HttpParser () : m_bytes (0), m_app (NULL), m_lastmeasurement ("0s")
 {
+  NS_LOG_FUNCTION (this);
+}
 
-  HttpParser::HttpParser() :
-      m_bytes(0), m_app(NULL), m_lastmeasurement("0s")
-  {
-    NS_LOG_FUNCTION(this);
-  }
+HttpParser::~HttpParser ()
+{
+  NS_LOG_FUNCTION (this);
+}
 
-  HttpParser::~HttpParser()
-  {
-    NS_LOG_FUNCTION(this);
-  }
+void
+HttpParser::SetApp (DashClient *app)
+{
+  NS_LOG_FUNCTION (this << app);
+  m_app = app;
+}
+void
+HttpParser::ReadSocket (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  Address from;
+  int bytes = socket->RecvFrom (&m_buffer[m_bytes], MPEG_MAX_MESSAGE - m_bytes, 0, from);
 
-  void
-  HttpParser::SetApp(DashClient *app)
-  {
-    NS_LOG_FUNCTION(this << app);
-    m_app = app;
-  }
-  void
-  HttpParser::ReadSocket(Ptr<Socket> socket)
-  {
-    NS_LOG_FUNCTION(this << socket);
-    Address from;
-    int bytes = socket->RecvFrom(&m_buffer[m_bytes], MPEG_MAX_MESSAGE - m_bytes,
-        0, from);
+  MPEGHeader mpeg_header;
+  HTTPHeader http_header;
 
-    MPEGHeader mpeg_header;
-    HTTPHeader http_header;
+  uint32_t headersize = mpeg_header.GetSerializedSize () + http_header.GetSerializedSize ();
 
-    uint32_t headersize = mpeg_header.GetSerializedSize()
-        + http_header.GetSerializedSize();
-
-    NS_LOG_INFO("### we read bytes: " << bytes);
-    if (bytes > 0)
-      {
-        m_bytes += bytes;
-
-        if (m_lastmeasurement > Time("0s"))
-          {
-            NS_LOG_INFO(
-                Simulator::Now().GetSeconds() << " bytes: " << bytes << " dt: " << (Simulator::Now() - m_lastmeasurement).GetSeconds() << " bitrate: " << (8 * (bytes + headersize)/ (Simulator::Now() - m_lastmeasurement).GetSeconds()));
-          }
-        m_lastmeasurement = Simulator::Now();
-      }
-
-    NS_LOG_INFO(
-        "### Buffer space: " << m_bytes << " Queue length " << m_app->GetPlayer().GetQueueSize());
-
-    if (m_bytes < headersize)
-      {
-        return;
-      }
-
-    Packet headerPacket(m_buffer, headersize);
-    headerPacket.RemoveHeader(mpeg_header);
-
-    uint32_t message_size = headersize + mpeg_header.GetSize();
-    NS_LOG_INFO("### message size: " << message_size);
-
-    if (m_bytes < message_size)
-      {
-        NS_LOG_INFO("### Not enough bytes, returning: m_bytes=" << m_bytes << " message_size=" << message_size);
-        return;
-      }
-      else
-      {
-        NS_LOG_INFO("### We have enough bytes, NOT returning: m_bytes=" << m_bytes << " message_size=" << message_size);
-      }
-
-    Packet message(m_buffer, message_size);
-    if (m_app->MessageReceived(message))
+  NS_LOG_INFO ("### we read bytes: " << bytes);
+  if (bytes > 0)
     {
-      NS_LOG_INFO("### I am in:  m_bytes=" << m_bytes << " message_size=" << message_size);
-      memmove(m_buffer, &m_buffer[message_size], m_bytes - message_size);
+      m_bytes += bytes;
+
+      if (m_lastmeasurement > Time ("0s"))
+        {
+          NS_LOG_INFO (Simulator::Now ().GetSeconds ()
+                       << " bytes: " << bytes << " dt: "
+                       << (Simulator::Now () - m_lastmeasurement).GetSeconds () << " bitrate: "
+                       << (8 * (bytes + headersize) /
+                           (Simulator::Now () - m_lastmeasurement).GetSeconds ()));
+        }
+      m_lastmeasurement = Simulator::Now ();
+    }
+
+  NS_LOG_INFO ("### Buffer space: " << m_bytes << " Queue length "
+                                    << m_app->GetPlayer ().GetQueueSize ());
+
+  if (m_bytes < headersize)
+    {
+      return;
+    }
+
+  Packet headerPacket (m_buffer, headersize);
+  headerPacket.RemoveHeader (mpeg_header);
+
+  uint32_t message_size = headersize + mpeg_header.GetSize ();
+  NS_LOG_INFO ("### message size: " << message_size);
+
+  if (m_bytes < message_size)
+    {
+      NS_LOG_INFO ("### Not enough bytes, returning: m_bytes=" << m_bytes
+                                                               << " message_size=" << message_size);
+      return;
+    }
+  else
+    {
+      NS_LOG_INFO ("### We have enough bytes, NOT returning: m_bytes="
+                   << m_bytes << " message_size=" << message_size);
+    }
+
+  Packet message (m_buffer, message_size);
+  if (m_app->MessageReceived (message))
+    {
+      NS_LOG_INFO ("### I am in:  m_bytes=" << m_bytes << " message_size=" << message_size);
+      memmove (m_buffer, &m_buffer[message_size], m_bytes - message_size);
       m_bytes -= message_size;
-      NS_LOG_INFO("ENQUEDE MESSAGE!!!! " << mpeg_header.GetFrameId());
-      ReadSocket(socket);
+      NS_LOG_INFO ("ENQUEDE MESSAGE!!!! " << mpeg_header.GetFrameId ());
+      ReadSocket (socket);
     }
-    else
+  else
     {
-      NS_LOG_INFO("BUFFER IS FULL!!!!");
+      NS_LOG_INFO ("BUFFER IS FULL!!!!");
     }
-  }
+}
 } // namespace ns3

@@ -31,8 +31,7 @@ private:
 };
 
 // Add some help text to this case to describe what it is intended to test
-DashTestCase1::DashTestCase1 ()
-  : TestCase ("Dash test case (does nothing)")
+DashTestCase1::DashTestCase1 () : TestCase ("Dash test case (does nothing)")
 {
 }
 
@@ -55,85 +54,83 @@ DashTestCase1::DoRun (void)
   double target_dt = 7;
   double stopTime = 100.0;
 
-//
-// Explicitly create the nodes required by the topology (shown above).
-//
+  //
+  // Explicitly create the nodes required by the topology (shown above).
+  //
   NodeContainer nodes;
-  nodes.Create(2);
-//
-// Explicitly create the point-to-point link required by the topology (shown above).
-//
+  nodes.Create (2);
+  //
+  // Explicitly create the point-to-point link required by the topology (shown above).
+  //
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue("500Kbps"));
-  pointToPoint.SetChannelAttribute("Delay", StringValue("5ms"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("500Kbps"));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("5ms"));
   NetDeviceContainer devices;
-  devices = pointToPoint.Install(nodes);
+  devices = pointToPoint.Install (nodes);
 
-//
-// Install the internet stack on the nodes
-//
+  //
+  // Install the internet stack on the nodes
+  //
   InternetStackHelper internet;
-  internet.Install(nodes);
+  internet.Install (nodes);
 
-//
-// We've got the "hardware" in place.  Now we need to add IP addresses.
-//
+  //
+  // We've got the "hardware" in place.  Now we need to add IP addresses.
+  //
   Ipv4AddressHelper ipv4;
-  ipv4.SetBase("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign(devices);
-//
-// Create a BulkSendApplication and install it on node 0
-//
-  uint16_t port = 80;  // well-known echo port number
+  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+  Ipv4InterfaceContainer i = ipv4.Assign (devices);
+  //
+  // Create a BulkSendApplication and install it on node 0
+  //
+  uint16_t port = 80; // well-known echo port number
 
   std::vector<DashClientHelper> clients;
   std::vector<ApplicationContainer> clientApps;
 
   for (uint32_t user = 1; user <= users; user++)
     {
-      DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port));
+      DashClientHelper client ("ns3::TcpSocketFactory", InetSocketAddress (i.GetAddress (1), port));
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user));
-      client.SetAttribute("window", TimeValue(Seconds(target_dt)));
-      ApplicationContainer clientApp = client.Install(nodes.Get(0));
-      clientApp.Start(Seconds(1.0));
-      clientApp.Stop(Seconds(stopTime));
+      client.SetAttribute ("VideoId", UintegerValue (user));
+      client.SetAttribute ("window", TimeValue (Seconds (target_dt)));
+      ApplicationContainer clientApp = client.Install (nodes.Get (0));
+      clientApp.Start (Seconds (1.0));
+      clientApp.Stop (Seconds (stopTime));
 
-      clients.push_back(client);
-      clientApps.push_back(clientApp);
-
+      clients.push_back (client);
+      clientApps.push_back (clientApp);
     }
 
-  DashServerHelper server("ns3::TcpSocketFactory",
-      InetSocketAddress(Ipv4Address::GetAny(), port));
-  ApplicationContainer serverApps = server.Install(nodes.Get(1));
-  serverApps.Start(Seconds(0.0));
-  serverApps.Stop(Seconds(stopTime + 5.0));
+  DashServerHelper server ("ns3::TcpSocketFactory",
+                           InetSocketAddress (Ipv4Address::GetAny (), port));
+  ApplicationContainer serverApps = server.Install (nodes.Get (1));
+  serverApps.Start (Seconds (0.0));
+  serverApps.Stop (Seconds (stopTime + 5.0));
 
-//
-// Set up tracing if enabled
-//
+  //
+  // Set up tracing if enabled
+  //
   if (tracing)
     {
       AsciiTraceHelper ascii;
-      pointToPoint.EnableAsciiAll(ascii.CreateFileStream("dash-send.tr"));
-      pointToPoint.EnablePcapAll("dash-send", false);
+      pointToPoint.EnableAsciiAll (ascii.CreateFileStream ("dash-send.tr"));
+      pointToPoint.EnablePcapAll ("dash-send", false);
     }
 
-//
-// Now, do the actual simulation.
-//
+  //
+  // Now, do the actual simulation.
+  //
   /*Simulator::Stop(Seconds(100.0));*/
-  Simulator::Run();
-  Simulator::Destroy();
+  Simulator::Run ();
+  Simulator::Destroy ();
 
   uint32_t k;
   for (k = 0; k < users; k++)
     {
-      Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
+      Ptr<DashClient> app = DynamicCast<DashClient> (clientApps[k].Get (0));
       std::cout << "Node: " << k;
-      app->GetStats();
+      app->GetStats ();
     }
 
   // A wide variety of test macros are available in src/core/test.h
@@ -152,8 +149,7 @@ public:
   DashTestSuite ();
 };
 
-DashTestSuite::DashTestSuite ()
-  : TestSuite ("dash", UNIT)
+DashTestSuite::DashTestSuite () : TestSuite ("dash", UNIT)
 {
   // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
   AddTestCase (new DashTestCase1, TestCase::QUICK);
@@ -161,4 +157,3 @@ DashTestSuite::DashTestSuite ()
 
 // Do not forget to allocate an instance of this TestSuite
 static DashTestSuite dashTestSuite;
-

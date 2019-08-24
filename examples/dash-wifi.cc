@@ -30,10 +30,10 @@
 #include "ns3/dash-module.h"
 
 using namespace ns3;
-NS_LOG_COMPONENT_DEFINE("Dash-Wifi");
+NS_LOG_COMPONENT_DEFINE ("Dash-Wifi");
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
   uint32_t nWifi = 8;
   uint32_t maxBytes = 0;
@@ -55,31 +55,26 @@ main(int argc, char *argv[])
   // run-time, via command-line arguments
   //
   CommandLine cmd;
-  cmd.AddValue("nWifi", "Number of wifi STA devices", nWifi);
-  cmd.AddValue("maxBytes", "Total number of bytes for application to send",
-      maxBytes);
-  cmd.AddValue("users", "The number of concurrent videos", users);
-  cmd.AddValue("bulkNo", "The number of background TCP transfers", bulkNo);
-  cmd.AddValue("targetDt",
-      "The target time difference between receiving and playing a frame.",
-      target_dt);
-  cmd.AddValue("stopTime",
-      "The time when the clients will stop requesting segments", stopTime);
-  cmd.AddValue("linkRate",
-      "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
-      linkRate);
-  cmd.AddValue("delay",
-      "The delay of the link connecting the clients to the server (e.g. 5ms)",
-      delay);
-  cmd.AddValue("algorithms",
+  cmd.AddValue ("nWifi", "Number of wifi STA devices", nWifi);
+  cmd.AddValue ("maxBytes", "Total number of bytes for application to send", maxBytes);
+  cmd.AddValue ("users", "The number of concurrent videos", users);
+  cmd.AddValue ("bulkNo", "The number of background TCP transfers", bulkNo);
+  cmd.AddValue ("targetDt", "The target time difference between receiving and playing a frame.",
+                target_dt);
+  cmd.AddValue ("stopTime", "The time when the clients will stop requesting segments", stopTime);
+  cmd.AddValue ("linkRate",
+                "The bitrate of the link connecting the clients to the server (e.g. 500kbps)",
+                linkRate);
+  cmd.AddValue ("delay", "The delay of the link connecting the clients to the server (e.g. 5ms)",
+                delay);
+  cmd.AddValue (
+      "algorithms",
       "The adaptation algorithm. It can be 'ns3::DashClient' or 'ns3::OsmpClient (for now).",
       algorithm);
-  cmd.AddValue("bufferSpace",
-      "The space in bytes that is used for buffering the video",
-      bufferSpace);
-  cmd.AddValue("window",
-      "The window for measuring the average throughput (Time).", window);
-  cmd.Parse(argc, argv);
+  cmd.AddValue ("bufferSpace", "The space in bytes that is used for buffering the video",
+                bufferSpace);
+  cmd.AddValue ("window", "The window for measuring the average throughput (Time).", window);
+  cmd.Parse (argc, argv);
 
   if (bulkNo + users > nWifi + 1)
     {
@@ -89,96 +84,94 @@ main(int argc, char *argv[])
 
   std::cout << "nWifi= " << nWifi << std::endl;
 
-  LogComponentEnable("UdpClient", LOG_LEVEL_INFO);
-  LogComponentEnable("UdpServer", LOG_LEVEL_INFO);
+  LogComponentEnable ("UdpClient", LOG_LEVEL_INFO);
+  LogComponentEnable ("UdpServer", LOG_LEVEL_INFO);
 
   NodeContainer wifiStaNodes;
-  wifiStaNodes.Create(nWifi);
+  wifiStaNodes.Create (nWifi);
 
-  YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-  YansWifiPhyHelper phy = YansWifiPhyHelper::Default();
-  phy.SetChannel(channel.Create());
+  YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
+  YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
+  phy.SetChannel (channel.Create ());
 
   //WifiHelper wifi = WifiHelper::Default();//deprecated
-  WifiHelper wifi = WifiHelper();
-  wifi.SetRemoteStationManager("ns3::AarfWifiManager");
+  WifiHelper wifi = WifiHelper ();
+  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
   WifiMacHelper mac;
 
   NetDeviceContainer staDevices;
-  staDevices = wifi.Install(phy, mac, wifiStaNodes);
+  staDevices = wifi.Install (phy, mac, wifiStaNodes);
 
   MobilityHelper mobility;
-  mobility.SetPositionAllocator("ns3::GridPositionAllocator", "MinX",
-      DoubleValue(0.0), "MinY", DoubleValue(0.0), "DeltaX", DoubleValue(40.0),
-      "DeltaY", DoubleValue(50.0), "GridWidth", UintegerValue(2), "LayoutType",
-      StringValue("RowFirst"));
+  mobility.SetPositionAllocator ("ns3::GridPositionAllocator", "MinX", DoubleValue (0.0), "MinY",
+                                 DoubleValue (0.0), "DeltaX", DoubleValue (40.0), "DeltaY",
+                                 DoubleValue (50.0), "GridWidth", UintegerValue (2), "LayoutType",
+                                 StringValue ("RowFirst"));
 
-  mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-  mobility.Install(wifiStaNodes);
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.Install (wifiStaNodes);
 
   InternetStackHelper stack;
-  stack.Install(wifiStaNodes);
+  stack.Install (wifiStaNodes);
   Ipv4AddressHelper address;
-  address.SetBase("10.1.2.0", "255.255.255.0");
-  Ipv4InterfaceContainer interfaces = address.Assign(staDevices);
-
+  address.SetBase ("10.1.2.0", "255.255.255.0");
+  Ipv4InterfaceContainer interfaces = address.Assign (staDevices);
 
   std::vector<std::string> algorithms;
-  std::stringstream ss(algorithm);
+  std::stringstream ss (algorithm);
   std::string proto;
   uint32_t protoNum = 0; // The number of algorithms (algorithms)
-  while (std::getline(ss, proto, ',') && protoNum++ < users)
+  while (std::getline (ss, proto, ',') && protoNum++ < users)
     {
-      algorithms.push_back(proto);
+      algorithms.push_back (proto);
     }
 
-  uint16_t port = 80;  // well-known echo port number
+  uint16_t port = 80; // well-known echo port number
 
   std::vector<DashClientHelper> clients;
   std::vector<ApplicationContainer> clientApps;
 
   for (uint32_t user = 0; user < users; user++)
     {
-      DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(interfaces.GetAddress(0), port),algorithms[user % protoNum]);
+      DashClientHelper client ("ns3::TcpSocketFactory",
+                               InetSocketAddress (interfaces.GetAddress (0), port),
+                               algorithms[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
-      client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
-      client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
-      client.SetAttribute("window", TimeValue(Time(window)));
-      client.SetAttribute("bufferSpace", UintegerValue(bufferSpace));
+      client.SetAttribute ("VideoId", UintegerValue (user + 1)); // VideoId should be positive
+      client.SetAttribute ("TargetDt", TimeValue (Seconds (target_dt)));
+      client.SetAttribute ("window", TimeValue (Time (window)));
+      client.SetAttribute ("bufferSpace", UintegerValue (bufferSpace));
 
-      ApplicationContainer clientApp = client.Install(wifiStaNodes.Get(user + 1)); // Node 0 is the server
-      clientApp.Start(Seconds(0.25));
-      clientApp.Stop(Seconds(stopTime));
+      ApplicationContainer clientApp =
+          client.Install (wifiStaNodes.Get (user + 1)); // Node 0 is the server
+      clientApp.Start (Seconds (0.25));
+      clientApp.Stop (Seconds (stopTime));
 
-      clients.push_back(client);
-      clientApps.push_back(clientApp);
-
+      clients.push_back (client);
+      clientApps.push_back (clientApp);
     }
 
-  DashServerHelper server("ns3::TcpSocketFactory",
-      InetSocketAddress(Ipv4Address::GetAny(), port));
-  ApplicationContainer serverApps = server.Install(wifiStaNodes.Get(0));
-  serverApps.Start(Seconds(0.0));
-  serverApps.Stop(Seconds(stopTime + 5.0));
+  DashServerHelper server ("ns3::TcpSocketFactory",
+                           InetSocketAddress (Ipv4Address::GetAny (), port));
+  ApplicationContainer serverApps = server.Install (wifiStaNodes.Get (0));
+  serverApps.Start (Seconds (0.0));
+  serverApps.Stop (Seconds (stopTime + 5.0));
 
   for (uint32_t bulk = 0; bulk < bulkNo; bulk++)
     {
-      BulkSendHelper source("ns3::TcpSocketFactory",
-          InetSocketAddress(interfaces.GetAddress(1 + users + bulk), port));
+      BulkSendHelper source ("ns3::TcpSocketFactory",
+                             InetSocketAddress (interfaces.GetAddress (1 + users + bulk), port));
 
-      source.SetAttribute("MaxBytes", UintegerValue(maxBytes));
-      ApplicationContainer sourceApps = source.Install(wifiStaNodes.Get(0));
-      sourceApps.Start(Seconds(0.0));
-      sourceApps.Stop(Seconds(stopTime));
+      source.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
+      ApplicationContainer sourceApps = source.Install (wifiStaNodes.Get (0));
+      sourceApps.Start (Seconds (0.0));
+      sourceApps.Stop (Seconds (stopTime));
 
-      PacketSinkHelper sink("ns3::TcpSocketFactory",
-          InetSocketAddress(Ipv4Address::GetAny(), port));
-      ApplicationContainer sinkApps = sink.Install(
-          wifiStaNodes.Get(1 + users + bulk));
-      sinkApps.Start(Seconds(0.0));
-      sinkApps.Stop(Seconds(stopTime));
-
+      PacketSinkHelper sink ("ns3::TcpSocketFactory",
+                             InetSocketAddress (Ipv4Address::GetAny (), port));
+      ApplicationContainer sinkApps = sink.Install (wifiStaNodes.Get (1 + users + bulk));
+      sinkApps.Start (Seconds (0.0));
+      sinkApps.Stop (Seconds (stopTime));
     }
 
   /*    UdpServerHelper server (22000);
@@ -194,17 +187,17 @@ main(int argc, char *argv[])
    clientApps.Start(Seconds(1.5));
    clientApps.Stop(Seconds(9.5));*/
 
-  Simulator::Stop(Seconds(stopTime));
-  AnimationInterface anim("dash-wifi.xml");
-  Simulator::Run();
-  Simulator::Destroy();
+  Simulator::Stop (Seconds (stopTime));
+  AnimationInterface anim ("dash-wifi.xml");
+  Simulator::Run ();
+  Simulator::Destroy ();
 
   uint32_t k;
   for (k = 0; k < users; k++)
     {
-      Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
+      Ptr<DashClient> app = DynamicCast<DashClient> (clientApps[k].Get (0));
       std::cout << algorithms[k % protoNum] << "-Node: " << k;
-      app->GetStats();
+      app->GetStats ();
     }
 
   return 0;

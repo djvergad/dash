@@ -9,26 +9,21 @@
 #define RAAHS_CLIENT_H_
 
 #include <ns3/dash-client.h>
-namespace ns3
+namespace ns3 {
+
+class RaahsClient : public DashClient
 {
+public:
+  static TypeId GetTypeId (void);
 
-  class RaahsClient : public DashClient
-  {
-  public:
-    static TypeId
-    GetTypeId(void);
+  RaahsClient ();
 
-    RaahsClient();
+  virtual ~RaahsClient ();
 
-    virtual
-    ~RaahsClient();
+  virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
 
-    virtual void
-    CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay);
-
-  private:
-
-  };
+private:
+};
 
 } /* namespace ns3 */
 

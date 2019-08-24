@@ -9,29 +9,24 @@
 #define AAASH_CLIENT_H_
 
 #include <ns3/dash-client.h>
-namespace ns3
+namespace ns3 {
+
+class AaashClient : public DashClient
 {
+public:
+  static TypeId GetTypeId (void);
 
-  class AaashClient : public DashClient
-  {
-  public:
-    static TypeId
-    GetTypeId(void);
+  AaashClient ();
 
-    AaashClient();
+  virtual ~AaashClient ();
 
-    virtual
-    ~AaashClient();
+  virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
 
-    virtual void
-    CalcNextSegment(uint32_t currRate, uint32_t & nextRate, Time & delay);
+private:
+  bool BufferInc ();
 
-  private:
-    bool
-    BufferInc();
-
-    bool m_running_fast_start;
-  };
+  bool m_running_fast_start;
+};
 
 } /* namespace ns3 */
 

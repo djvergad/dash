@@ -24,31 +24,26 @@
 #include <ns3/ptr.h>
 #include "mpeg-header.h"
 
-namespace ns3
+namespace ns3 {
+
+class Socket;
+class DashClient;
+
+class HttpParser
 {
+public:
+  HttpParser ();
+  virtual ~HttpParser ();
+  void ReadSocket (Ptr<Socket> socket);
+  void SetApp (DashClient *app);
 
-  class Socket;
-  class DashClient;
+private:
+  uint8_t m_buffer[MPEG_MAX_MESSAGE];
+  uint32_t m_bytes;
+  DashClient *m_app;
 
-  class HttpParser
-  {
-  public:
-    HttpParser();
-    virtual
-    ~HttpParser();
-    void
-    ReadSocket(Ptr<Socket> socket);
-    void
-    SetApp(DashClient *app);
-
-  private:
-    uint8_t m_buffer[MPEG_MAX_MESSAGE];
-    uint32_t m_bytes;
-    DashClient *m_app;
-
-    Time m_lastmeasurement;
-
-  };
+  Time m_lastmeasurement;
+};
 
 } // namespace ns3
 

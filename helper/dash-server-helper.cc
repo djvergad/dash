@@ -34,7 +34,7 @@ DashServerHelper::DashServerHelper (std::string protocol, Address address)
   m_factory.Set ("Local", AddressValue (address));
 }
 
-void 
+void
 DashServerHelper::SetAttribute (std::string name, const AttributeValue &value)
 {
   m_factory.Set (name, value);
