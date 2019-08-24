@@ -64,6 +64,7 @@ namespace ns3
     uint32_t headersize = mpeg_header.GetSerializedSize()
         + http_header.GetSerializedSize();
 
+    NS_LOG_INFO("### we read bytes: " << bytes);
     if (bytes > 0)
       {
         m_bytes += bytes;
@@ -88,18 +89,30 @@ namespace ns3
     headerPacket.RemoveHeader(mpeg_header);
 
     uint32_t message_size = headersize + mpeg_header.GetSize();
+    NS_LOG_INFO("### message size: " << message_size);
 
     if (m_bytes < message_size)
       {
+        NS_LOG_INFO("### Not enough bytes, returning: m_bytes=" << m_bytes << " message_size=" << message_size);
         return;
       }
+      else
+      {
+        NS_LOG_INFO("### We have enough bytes, NOT returning: m_bytes=" << m_bytes << " message_size=" << message_size);
+      }
+
     Packet message(m_buffer, message_size);
-
-    memmove(m_buffer, &m_buffer[message_size], m_bytes - message_size);
-    m_bytes -= message_size;
-
-    m_app->MessageReceived(message);
-
-    ReadSocket(socket);
+    if (m_app->MessageReceived(message))
+    {
+      NS_LOG_INFO("### I am in:  m_bytes=" << m_bytes << " message_size=" << message_size);
+      memmove(m_buffer, &m_buffer[message_size], m_bytes - message_size);
+      m_bytes -= message_size;
+      NS_LOG_INFO("ENQUEDE MESSAGE!!!! " << mpeg_header.GetFrameId());
+      ReadSocket(socket);
+    }
+    else
+    {
+      NS_LOG_INFO("BUFFER IS FULL!!!!");
+    }
   }
 } // namespace ns3

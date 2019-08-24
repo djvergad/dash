@@ -81,11 +81,15 @@ main(int argc, char *argv[])
   std::string delay = "5ms";
   std::string switchTime = "0s";
   std::string switchStart = "190s";
-  std::string protocol = "ns3::DashClient";
+  std::string algorithm = "ns3::DashClient";
   std::string window = "10s";
+  uint32_t bufferSpace = 10000000;
 
-  /*LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
-   LogComponentEnable ("DashClient", LOG_LEVEL_ALL);*/
+/*
+  LogComponentEnable ("DashServer", LOG_LEVEL_ALL);
+  LogComponentEnable ("DashClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("HttpParser", LOG_LEVEL_ALL);
+*/
 
 //
 // Allow the user to override any of the defaults at
@@ -110,11 +114,14 @@ main(int argc, char *argv[])
   cmd.AddValue("switchTime",
       "The time spent on each state (HIGH or LOW). 0 for no switch",
       switchTime);
-  cmd.AddValue("protocol",
-      "The adaptation protocol. It can be 'ns3::DashClient' or 'ns3::OsmpClient (for now).",
-      protocol);
+  cmd.AddValue("algorithms",
+      "The adaptation algorithm. It can be 'ns3::DashClient' or 'ns3::OsmpClient (for now).",
+      algorithm);
   cmd.AddValue("window",
       "The window for measuring the average throughput (Time).", window);
+  cmd.AddValue("bufferSpace",
+      "The space in bytes that is used for buffering the video",
+      bufferSpace);
   cmd.Parse(argc, argv);
 
 //
@@ -168,13 +175,13 @@ main(int argc, char *argv[])
 
   NS_LOG_INFO("Create Applications.");
 
-  std::vector<std::string> protocols;
-  std::stringstream ss(protocol);
+  std::vector<std::string> algorithms;
+  std::stringstream ss(algorithm);
   std::string proto;
-  uint32_t protoNum = 0; // The number of protocols (algorithms)
+  uint32_t protoNum = 0; // The number of algorithms
   while (std::getline(ss, proto, ',') && protoNum++ < users)
     {
-      protocols.push_back(proto);
+      algorithms.push_back(proto);
     }
 
   uint16_t port = 80;  // well-known echo port number
@@ -185,11 +192,12 @@ main(int argc, char *argv[])
   for (uint32_t user = 0; user < users; user++)
     {
       DashClientHelper client("ns3::TcpSocketFactory",
-          InetSocketAddress(i.GetAddress(1), port), protocols[user % protoNum]);
+          InetSocketAddress(i.GetAddress(1), port), algorithms[user % protoNum]);
       //client.SetAttribute ("MaxBytes", UintegerValue (maxBytes));
       client.SetAttribute("TargetDt", TimeValue(Seconds(target_dt)));
       client.SetAttribute("VideoId", UintegerValue(user + 1)); // VideoId should be positive
       client.SetAttribute("window",TimeValue(Time(window)));
+      client.SetAttribute("bufferSpace", UintegerValue(bufferSpace));
 
       ApplicationContainer clientApp = client.Install(nodes.Get(0));
       clientApp.Start(Seconds(0.25));
@@ -229,7 +237,7 @@ main(int argc, char *argv[])
   for (k = 0; k < users; k++)
     {
       Ptr<DashClient> app = DynamicCast<DashClient>(clientApps[k].Get(0));
-      std::cout << protocols[k % protoNum] << "-Node: " << k;
+      std::cout << algorithms[k % protoNum] << "-Node: " << k;
       app->GetStats();
     }
 

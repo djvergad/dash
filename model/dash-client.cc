@@ -40,29 +40,48 @@ namespace ns3
   DashClient::GetTypeId(void)
   {
     static TypeId tid =
-        TypeId("ns3::DashClient").SetParent<Application>().AddConstructor<
-            DashClient>().AddAttribute("VideoId",
-            "The Id of the video that is played.", UintegerValue(0),
-            MakeUintegerAccessor(&DashClient::m_videoId),
-            MakeUintegerChecker<uint32_t>(1)).AddAttribute("Remote",
-            "The address of the destination", AddressValue(),
-            MakeAddressAccessor(&DashClient::m_peer), MakeAddressChecker()).AddAttribute(
-            "Protocol", "The type of TCP protocol to use.",
-            TypeIdValue(TcpSocketFactory::GetTypeId()),
-            MakeTypeIdAccessor(&DashClient::m_tid), MakeTypeIdChecker()).AddAttribute(
-            "TargetDt", "The target buffering time", TimeValue(Time("35s")),
-            MakeTimeAccessor(&DashClient::m_target_dt), MakeTimeChecker()).AddAttribute(
-            "window", "The window for measuring the average throughput (Time)",
-            TimeValue(Time("10s")), MakeTimeAccessor(&DashClient::m_window),
-            MakeTimeChecker()
-
-            ).AddTraceSource("Tx", "A new packet is created and is sent",
-            MakeTraceSourceAccessor(&DashClient::m_txTrace), "ns3::Packet::TracedCallback");
+        TypeId("ns3::DashClient").SetParent<Application>()
+           .AddConstructor<DashClient>()
+           .AddAttribute("VideoId",
+                         "The Id of the video that is played.",
+                         UintegerValue(0),
+                         MakeUintegerAccessor(&DashClient::m_videoId),
+                         MakeUintegerChecker<uint32_t>(1))
+            .AddAttribute("Remote",
+                          "The address of the destination",
+                          AddressValue(),
+                          MakeAddressAccessor(&DashClient::m_peer),
+                          MakeAddressChecker())
+            .AddAttribute("Protocol",
+                          "The type of TCP protocol to use.",
+                          TypeIdValue(TcpSocketFactory::GetTypeId()),
+                          MakeTypeIdAccessor(&DashClient::m_tid),
+                          MakeTypeIdChecker())
+            .AddAttribute("TargetDt",
+                          "The target buffering time",
+                          TimeValue(Time("35s")),
+                          MakeTimeAccessor(&DashClient::m_target_dt),
+                          MakeTimeChecker())
+            .AddAttribute("window",
+                          "The window for measuring the average throughput (Time)",
+                          TimeValue(Time("10s")),
+                          MakeTimeAccessor(&DashClient::m_window),
+                          MakeTimeChecker())
+            .AddAttribute("bufferSpace",
+                          "The buffer space in bytes",
+                          UintegerValue(10000000),
+                          MakeUintegerAccessor(&DashClient::m_bufferSpace),
+                          MakeUintegerChecker<uint32_t> ())
+            .AddTraceSource("Tx",
+                          "A new packet is created and is sent",
+                          MakeTraceSourceAccessor(&DashClient::m_txTrace),
+                          "ns3::Packet::TracedCallback");
     return tid;
   }
 
   DashClient::DashClient() :
-      m_rateChanges(0), m_target_dt("35s"), m_bitrateEstimate(0.0), m_segmentId(
+          m_bufferSpace(0), m_player(this->GetObject<DashClient>(), m_bufferSpace),
+          m_rateChanges(0), m_target_dt("35s"), m_bitrateEstimate(0.0), m_segmentId(
           0), m_socket(0), m_connected(false), m_totBytes(0), m_startedReceiving(
           Seconds(0)), m_sumDt(Seconds(0)), m_lastDt(Seconds(-1)), m_id(
           m_countObjs++), m_requestTime("0s"), m_segment_bytes(0), m_bitRate(
@@ -188,6 +207,13 @@ namespace ns3
   }
 
   void
+  DashClient::CheckBuffer()
+  {
+    NS_LOG_FUNCTION(this);
+    m_parser.ReadSocket(m_socket);
+  }
+
+  void
   DashClient::HandleRead(Ptr<Socket> socket)
   {
     NS_LOG_FUNCTION(this << socket);
@@ -229,7 +255,7 @@ namespace ns3
       }
   }
 
-  void
+  bool
   DashClient::MessageReceived(Packet message)
   {
     NS_LOG_FUNCTION(this << message);
@@ -238,7 +264,10 @@ namespace ns3
     HTTPHeader httpHeader;
 
     // Send the frame to the player
-    m_player.ReceiveFrame(&message);
+    // If it doesn't fit in the buffer, don't continue
+    if (!m_player.ReceiveFrame(&message)) {
+      return false;
+    }
     m_segment_bytes += message.GetSize();
     m_totBytes += message.GetSize();
 
@@ -254,7 +283,7 @@ namespace ns3
     case MPEG_PLAYER_PAUSED:
       break;
     case MPEG_PLAYER_DONE:
-      return;
+      return true;
     default:
       NS_FATAL_ERROR("WRONG STATE");
       }
@@ -319,7 +348,7 @@ namespace ns3
         m_lastDt = currDt;
 
       }
-
+    return true;
   }
 
   void

@@ -35,15 +35,30 @@ namespace ns3
 
   class DashClient;
 
+  class FrameBuffer
+  {
+  public:
+    FrameBuffer(uint32_t& capasity);
+    bool push(Ptr<Packet> frame);
+    Ptr<Packet> pop();
+    int size();
+    bool empty();
+
+  private:
+    uint32_t& m_capacity;
+    uint32_t m_size_in_bytes = 0;
+    std::queue<Ptr<Packet> > m_queue;
+  };
+
   class MpegPlayer
   {
   public:
-    MpegPlayer();
+    MpegPlayer(Ptr<DashClient> dashClient, uint32_t& capasity);
 
     virtual
     ~MpegPlayer();
 
-    void
+    bool
     ReceiveFrame(Ptr<Packet> message);
 
     int
@@ -76,10 +91,9 @@ namespace ns3
     PlayFrame();
 
     Time m_lastpaused;
-    std::queue<Ptr<Packet> > m_queue;
+    FrameBuffer m_frameBuffer;
     Time m_bufferDelay;
-    DashClient * m_dashClient;
-
+    Ptr<DashClient> m_dashClient;
   };
 } // namespace ns3
 

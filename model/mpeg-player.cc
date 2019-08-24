@@ -31,9 +31,49 @@ NS_LOG_COMPONENT_DEFINE("MpegPlayer");
 namespace ns3
 {
 
-  MpegPlayer::MpegPlayer() :
+  FrameBuffer::FrameBuffer(uint32_t& capasity) : m_capacity(capasity) { }
+
+  bool FrameBuffer::push(Ptr<Packet> frame)
+  {
+    NS_LOG_FUNCTION(this);
+    if (m_size_in_bytes + frame->GetSerializedSize() <= m_capacity )
+    {
+      m_queue.push(frame);
+      m_size_in_bytes += frame->GetSerializedSize();
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  Ptr<Packet> FrameBuffer::pop()
+  {
+    NS_LOG_FUNCTION(this);
+    Ptr<Packet> frame = m_queue.front();
+    m_queue.pop();
+    m_size_in_bytes -= frame->GetSerializedSize();
+    return frame;
+  }
+
+  int FrameBuffer::size()
+  {
+    NS_LOG_FUNCTION(this);
+    return m_queue.size();
+  }
+
+  bool FrameBuffer::empty()
+  {
+    NS_LOG_FUNCTION(this);
+    return m_queue.empty();
+  }
+
+
+  MpegPlayer::MpegPlayer(Ptr<DashClient> dashClient, uint32_t& capasity):
       m_state(MPEG_PLAYER_NOT_STARTED), m_interrruptions(0), m_totalRate(0), m_minRate(
-          100000000), m_framesPlayed(0), m_bufferDelay("0s")
+          100000000), m_framesPlayed(0), m_frameBuffer(capasity), m_bufferDelay("0s"),
+          m_dashClient(dashClient)
   {
     NS_LOG_FUNCTION(this);
   }
@@ -46,7 +86,7 @@ namespace ns3
   int
   MpegPlayer::GetQueueSize()
   {
-    return m_queue.size();
+    return m_frameBuffer.size();
   }
 
   Time
@@ -61,7 +101,7 @@ namespace ns3
         - Simulator::Now();
   }
 
-  void
+  bool
   MpegPlayer::ReceiveFrame(Ptr<Packet> message)
   {
     NS_LOG_FUNCTION(this << message);
@@ -69,7 +109,11 @@ namespace ns3
 
     Ptr<Packet> msg = message->Copy();
 
-    m_queue.push(msg);
+    if (!m_frameBuffer.push(msg))
+    {
+      return false;
+    }
+
     if (m_state == MPEG_PLAYER_PAUSED)
       {
         NS_LOG_INFO("Play resumed");
@@ -84,6 +128,7 @@ namespace ns3
         m_start_time = Simulator::Now();
         Simulator::Schedule(Simulator::Now(), &MpegPlayer::PlayFrame, this);
       }
+    return true;
   }
 
   void
@@ -103,7 +148,7 @@ namespace ns3
       {
         return;
       }
-    if (m_queue.empty())
+    if (m_frameBuffer.empty())
       {
         NS_LOG_INFO(Simulator::Now().GetSeconds() << " No frames to play");
         m_state = MPEG_PLAYER_PAUSED;
@@ -111,8 +156,8 @@ namespace ns3
         m_interrruptions++;
         return;
       }
-    Ptr<Packet> message = m_queue.front();
-    m_queue.pop();
+
+    Ptr<Packet> message = m_frameBuffer.pop();
 
     MPEGHeader mpeg_header;
     HTTPHeader http_header;
@@ -138,11 +183,11 @@ namespace ns3
       {
         m_dashClient->RequestSegment();
         m_bufferDelay = Seconds(0);
-        m_dashClient = NULL;
+        // m_dashClient = NULL;
       }
 
     NS_LOG_INFO(
-        Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: " << http_header.GetVideoId() << " SegId: " << http_header.GetSegmentId() << " Res: " << http_header.GetResolution() << " FrameId: " << mpeg_header.GetFrameId() << " PlayTime: " << mpeg_header.GetPlaybackTime().GetSeconds() << " Type: " << (char) mpeg_header.GetType() << " interTime: " << m_interruption_time.GetSeconds() << " queueLength: " << m_queue.size());
+        Simulator::Now().GetSeconds() << " PLAYING FRAME: " << " VidId: " << http_header.GetVideoId() << " SegId: " << http_header.GetSegmentId() << " Res: " << http_header.GetResolution() << " FrameId: " << mpeg_header.GetFrameId() << " PlayTime: " << mpeg_header.GetPlaybackTime().GetSeconds() << " Type: " << (char) mpeg_header.GetType() << " interTime: " << m_interruption_time.GetSeconds() << " queueLength: " << m_frameBuffer.size());
 
     /*   std::cout << " frId: " << mpeg_header.GetFrameId()
      << " playtime: " << mpeg_header.GetPlaybackTime()
@@ -151,6 +196,12 @@ namespace ns3
      << std::endl;
      */
     Simulator::Schedule(MilliSeconds(20), &MpegPlayer::PlayFrame, this);
+
+    // There may be space now to read a new packet from the socket
+    if (m_dashClient)
+      {
+        Simulator::Schedule(MilliSeconds(0), &DashClient::CheckBuffer, m_dashClient);
+      }
 
   }
 

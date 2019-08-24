@@ -394,7 +394,10 @@ static ns3::GlobalValue g_algorithms ("algorithms",
                                       "You may find the list of available algorithms in src/dash/model/algorithms",
                                   ns3::StringValue ("ns3::FdashClient"),
                                   ns3::MakeStringChecker ());
-
+static ns3::GlobalValue g_bufferSpace ("bufferSpace",
+                                       "The space in bytes that is used for buffering the video",
+                                       ns3::UintegerValue (10000000),
+                                       MakeUintegerChecker<uint32_t> ());
 int
 main (int argc, char *argv[])
 {
@@ -502,6 +505,8 @@ main (int argc, char *argv[])
   double window = doubleValue.Get ();
   GlobalValue::GetValueByName ("algorithms", stringValue);
   std::istringstream iss(stringValue.Get ());
+  GlobalValue::GetValueByName ("bufferSpace", uintegerValue);
+  uint32_t bufferSpace = uintegerValue.Get ();
   std::vector<std::string> algorithms{std::istream_iterator<std::string>{iss},
                                       std::istream_iterator<std::string>{}};
 
@@ -831,6 +836,8 @@ main (int argc, char *argv[])
                   dashClientHelper.SetAttribute("VideoId", UintegerValue(u + 1)); // VideoId should be positive
                   dashClientHelper.SetAttribute("TargetDt", TimeValue(Seconds(targetDt)));
                   dashClientHelper.SetAttribute("window", TimeValue(Seconds(window)));
+                  dashClientHelper.SetAttribute("bufferSpace", UintegerValue(bufferSpace));
+
                   clientApps.Add (dashClientHelper.Install (ue));
                 }
               else // use TCP

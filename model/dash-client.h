@@ -92,6 +92,8 @@ namespace ns3
       return m_player;
     }
 
+    void CheckBuffer();
+
   protected:
     virtual void
     DoDispose(void);
@@ -112,6 +114,9 @@ namespace ns3
 
     double
     GetSegmentFetchTime();
+
+    uint32_t m_bufferSpace;
+    MpegPlayer m_player;     // The MpegPlayer object
 
     std::map<Time, Time> m_bufferState;
     uint32_t m_rateChanges;
@@ -136,7 +141,7 @@ namespace ns3
      *
      * \param the message that was received
      */
-    void
+    bool
     MessageReceived(Packet message);
 
     // inherited from Application base class.
@@ -162,7 +167,7 @@ namespace ns3
       m_window = time;
     }
 
-    MpegPlayer m_player;     // The MpegPlayer object
+
     HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
     Ptr<Socket> m_socket;    // Associated socket
     Address m_peer;          // Peer address

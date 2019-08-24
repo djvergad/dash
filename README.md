@@ -37,7 +37,7 @@ Installation instructions
 
   4. Now the setup is complete. Validate by running an example:  
        ```
-       ./waf --run 'src/dash/examples/dash-example --users=3 --protocol="ns3::FdashClient" --linkRate=1000Kbps'
+       ./waf --run 'src/dash/examples/dash-example --users=3 --algorithms="ns3::FdashClient" --linkRate=1000Kbps --bufferSpace=10000000'
        ```
      There should be output similar to the following:
        ```
