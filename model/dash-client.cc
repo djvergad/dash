@@ -363,11 +363,15 @@ void
 DashClient::LogBufferLevel (Time t)
 {
   m_bufferState[Simulator::Now ()] = t;
-  for (std::map<Time, Time>::iterator it = m_bufferState.begin (); it != m_bufferState.end (); ++it)
+  for (auto it = m_bufferState.cbegin (); it != m_bufferState.cend (); )
     {
       if (it->first < (Simulator::Now () - m_window))
         {
-          m_bufferState.erase (it->first);
+          m_bufferState.erase (it++);
+        }
+      else
+        {
+          ++it;
         }
     }
 }
@@ -420,16 +424,17 @@ DashClient::AddBitRate (Time time, double bitrate)
   m_bitrates[time] = bitrate;
   double sum = 0;
   int count = 0;
-  for (std::map<Time, double>::iterator it = m_bitrates.begin (); it != m_bitrates.end (); ++it)
+  for (auto it = m_bitrates.cbegin (); it != m_bitrates.cend ();)
     {
       if (it->first < (Simulator::Now () - m_window))
         {
-          m_bitrates.erase (it->first);
+          m_bitrates.erase (it++);
         }
       else
         {
           sum += it->second;
           count++;
+	  ++it;
         }
     }
   m_bitrateEstimate = sum / count;
