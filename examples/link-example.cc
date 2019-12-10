@@ -87,7 +87,7 @@ main (int argc, char *argv[])
   std::string switchStart = "190s";
   std::string algorithm = "ns3::DashClient";
   std::string window = "10s";
-  uint32_t bufferSpace = 10000000;
+  uint32_t bufferSpace = 100000000;
 
   /*
   LogComponentEnable ("DashServer", LOG_LEVEL_ALL);

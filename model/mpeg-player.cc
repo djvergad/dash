@@ -30,7 +30,7 @@
 NS_LOG_COMPONENT_DEFINE ("MpegPlayer");
 namespace ns3 {
 
-FrameBuffer::FrameBuffer (uint32_t &capasity) : m_capacity (capasity)
+FrameBuffer::FrameBuffer (uint32_t &capacity) : m_capacity (capacity)
 {
 }
 
@@ -46,6 +46,7 @@ FrameBuffer::push (Ptr<Packet> frame)
     }
   else
     {
+      NS_LOG_INFO("Client buffer is full. capacity="<< m_capacity << " size=" << m_size_in_bytes << " frame= " << frame->GetSerializedSize ());
       return false;
     }
 }
@@ -74,13 +75,13 @@ FrameBuffer::empty ()
   return m_queue.empty ();
 }
 
-MpegPlayer::MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capasity)
+MpegPlayer::MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capacity)
     : m_state (MPEG_PLAYER_NOT_STARTED),
       m_interrruptions (0),
       m_totalRate (0),
       m_minRate (100000000),
       m_framesPlayed (0),
-      m_frameBuffer (capasity),
+      m_frameBuffer (capacity),
       m_bufferDelay ("0s"),
       m_dashClient (dashClient)
 {

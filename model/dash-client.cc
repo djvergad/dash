@@ -55,7 +55,7 @@ DashClient::GetTypeId (void)
           .AddAttribute ("window", "The window for measuring the average throughput (Time)",
                          TimeValue (Time ("10s")), MakeTimeAccessor (&DashClient::m_window),
                          MakeTimeChecker ())
-          .AddAttribute ("bufferSpace", "The buffer space in bytes", UintegerValue (10000000),
+          .AddAttribute ("bufferSpace", "The buffer space in bytes", UintegerValue (100000000),
                          MakeUintegerAccessor (&DashClient::m_bufferSpace),
                          MakeUintegerChecker<uint32_t> ())
           .AddTraceSource ("Tx", "A new packet is created and is sent",
