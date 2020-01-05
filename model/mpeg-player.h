@@ -34,7 +34,7 @@ class DashClient;
 class FrameBuffer
 {
 public:
-  FrameBuffer (uint32_t &capacity);
+  FrameBuffer (uint32_t &capasity);
   bool push (Ptr<Packet> frame);
   Ptr<Packet> pop ();
   int size ();
@@ -49,7 +49,7 @@ private:
 class MpegPlayer
 {
 public:
-  MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capacity);
+  MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capasity);
 
   virtual ~MpegPlayer ();
 

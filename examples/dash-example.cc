@@ -48,7 +48,7 @@ main (int argc, char *argv[])
   std::string linkRate = "500Kbps";
   std::string delay = "5ms";
   std::string algorithm = "ns3::DashClient";
-  uint32_t bufferSpace = 100000000;
+  uint32_t bufferSpace = 10000000;
   std::string window = "10s";
 
   /*  LogComponentEnable("MpegPlayer", LOG_LEVEL_ALL);*/
