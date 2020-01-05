@@ -379,7 +379,7 @@ static ns3::GlobalValue
                   ns3::StringValue ("ns3::FdashClient"), ns3::MakeStringChecker ());
 static ns3::GlobalValue g_bufferSpace ("bufferSpace",
                                        "The space in bytes that is used for buffering the video",
-                                       ns3::UintegerValue (10000000),
+                                       ns3::UintegerValue (30000000),
                                        MakeUintegerChecker<uint32_t> ());
 int
 main (int argc, char *argv[])

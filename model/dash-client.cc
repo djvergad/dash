@@ -55,7 +55,7 @@ DashClient::GetTypeId (void)
           .AddAttribute ("window", "The window for measuring the average throughput (Time)",
                          TimeValue (Time ("10s")), MakeTimeAccessor (&DashClient::m_window),
                          MakeTimeChecker ())
-          .AddAttribute ("bufferSpace", "The buffer space in bytes", UintegerValue (10000000),
+          .AddAttribute ("bufferSpace", "The buffer space in bytes", UintegerValue (30000000),
                          MakeUintegerAccessor (&DashClient::m_bufferSpace),
                          MakeUintegerChecker<uint32_t> ())
           .AddTraceSource ("Tx", "A new packet is created and is sent",
@@ -74,7 +74,7 @@ DashClient::DashClient ()
       m_socket (0),
       m_connected (false),
       m_totBytes (0),
-      m_startedReceiving (Seconds (0)),
+      m_started (Seconds (0)),
       m_sumDt (Seconds (0)),
       m_lastDt (Seconds (-1)),
       m_id (m_countObjs++),
@@ -120,7 +120,10 @@ void DashClient::StartApplication (void) // Called at time specified by Start
   NS_LOG_INFO ("trying to create connection");
   if (!m_socket)
     {
-      NS_LOG_INFO ("Just created connection");
+      NS_LOG_INFO ("m_socket is null");
+
+      m_started = Simulator::Now ();
+
       m_socket = Socket::CreateSocket (GetNode (), m_tid);
 
       // Fatal error if socket type is not NS3_SOCK_STREAM or NS3_SOCK_SEQPACKET
@@ -146,6 +149,7 @@ void DashClient::StartApplication (void) // Called at time specified by Start
       m_socket->SetConnectCallback (MakeCallback (&DashClient::ConnectionSucceeded, this),
                                     MakeCallback (&DashClient::ConnectionFailed, this));
       m_socket->SetSendCallback (MakeCallback (&DashClient::DataSend, this));
+      NS_LOG_INFO ("Connected callbacks");
     }
   NS_LOG_INFO ("Just started connection");
 }
@@ -172,6 +176,13 @@ void
 DashClient::RequestSegment ()
 {
   NS_LOG_FUNCTION (this);
+
+  if (m_RequestPending)
+    {
+      NS_LOG_INFO ("Not requesting, found pending m_segmentId = " << m_segmentId);
+      return;
+    }
+  m_RequestPending = true;
 
   if (m_connected == false)
     {
@@ -202,7 +213,7 @@ void
 DashClient::CheckBuffer ()
 {
   NS_LOG_FUNCTION (this);
-  m_parser.ReadSocket (m_socket);
+  m_parser.TryToPushToPlayer ();
 }
 
 void
@@ -226,7 +237,10 @@ void
 DashClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_LOG_LOGIC ("DashClient, Connection Failed");
+  NS_LOG_LOGIC ("DashClient " << m_id << ", Connection Failed, retrying...");
+  m_socket = 0;
+  m_connected = false;
+  StartApplication ();
 }
 
 void DashClient::DataSend (Ptr<Socket>, uint32_t)
@@ -261,8 +275,8 @@ DashClient::MessageReceived (Packet message)
   m_segment_bytes += message.GetSize ();
   m_totBytes += message.GetSize ();
 
-  message.RemoveHeader (mpegHeader);
   message.RemoveHeader (httpHeader);
+  message.RemoveHeader (mpegHeader);
 
   // Calculate the buffering time
   switch (m_player.m_state)
@@ -272,15 +286,21 @@ DashClient::MessageReceived (Packet message)
       break;
     case MPEG_PLAYER_PAUSED:
       break;
+    case MPEG_INITIAL_BUFFERING:
+      break;
     case MPEG_PLAYER_DONE:
       return true;
     default:
       NS_FATAL_ERROR ("WRONG STATE");
     }
 
+  NS_LOG_INFO ("Received frame " << mpegHeader.GetFrameId () << " out of "
+                                 << MPEG_FRAMES_PER_SEGMENT);
+
   // If we received the last frame of the segment
   if (mpegHeader.GetFrameId () == MPEG_FRAMES_PER_SEGMENT - 1)
     {
+      m_RequestPending = false;
       m_segmentFetchTime = Simulator::Now () - m_requestTime;
 
       NS_LOG_INFO (Simulator::Now ().GetSeconds ()
@@ -314,11 +334,12 @@ DashClient::MessageReceived (Packet message)
 
       if (bufferDelay == Seconds (0))
         {
+          NS_LOG_INFO ("Requesting frame immediately due zero buffer delay");
           RequestSegment ();
         }
       else
         {
-          m_player.SchduleBufferWakeup (bufferDelay, this);
+          Simulator::Schedule (bufferDelay, &DashClient::RequestSegment, this);
         }
 
       std::cout << Simulator::Now ().GetSeconds () << " Node: " << m_id
@@ -327,7 +348,7 @@ DashClient::MessageReceived (Packet message)
                 << " interTime: " << m_player.m_interruption_time.GetSeconds ()
                 << " T: " << currDt.GetSeconds ()
                 << " dT: " << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds () : 0)
-                << " del: " << bufferDelay << std::endl;
+                << " del: " << bufferDelay.GetSeconds () << std::endl;
 
       NS_LOG_INFO ("==== Last frame received. Requesting segment " << m_segmentId);
 
@@ -363,7 +384,7 @@ void
 DashClient::LogBufferLevel (Time t)
 {
   m_bufferState[Simulator::Now ()] = t;
-  for (auto it = m_bufferState.cbegin (); it != m_bufferState.cend (); )
+  for (auto it = m_bufferState.cbegin (); it != m_bufferState.cend ();)
     {
       if (it->first < (Simulator::Now () - m_window))
         {
@@ -434,7 +455,7 @@ DashClient::AddBitRate (Time time, double bitrate)
         {
           sum += it->second;
           count++;
-	  ++it;
+          ++it;
         }
     }
   m_bitrateEstimate = sum / count;

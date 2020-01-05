@@ -41,6 +41,9 @@ FrameBuffer::push (Ptr<Packet> frame)
   if (m_size_in_bytes + frame->GetSerializedSize () <= m_capacity)
     {
       m_queue.push (frame);
+      NS_LOG_INFO ("pushing packet with size = " << frame->GetSize () << " serialized = "
+                                                 << frame->GetSerializedSize ());
+
       m_size_in_bytes += frame->GetSerializedSize ();
       return true;
     }
@@ -56,6 +59,9 @@ FrameBuffer::pop ()
   NS_LOG_FUNCTION (this);
   Ptr<Packet> frame = m_queue.front ();
   m_queue.pop ();
+  NS_LOG_INFO ("popping packet with size = " << frame->GetSize ()
+                                             << " serialized = " << frame->GetSerializedSize ());
+
   m_size_in_bytes -= frame->GetSerializedSize ();
   return frame;
 }
@@ -135,9 +141,8 @@ MpegPlayer::ReceiveFrame (Ptr<Packet> message)
   else if (m_state == MPEG_PLAYER_NOT_STARTED)
     {
       NS_LOG_INFO ("Play started");
-      m_state = MPEG_PLAYER_PLAYING;
-      m_start_time = Simulator::Now ();
-      Simulator::Schedule (Simulator::Now (), &MpegPlayer::PlayFrame, this);
+      m_state = MPEG_INITIAL_BUFFERING;
+      Simulator::Schedule (Seconds (1), &MpegPlayer::PlayFrame, this);
     }
   return true;
 }
@@ -158,6 +163,11 @@ MpegPlayer::PlayFrame (void)
     {
       return;
     }
+  else if (m_state == MPEG_INITIAL_BUFFERING)
+    {
+      m_start_time = Simulator::Now ();
+      m_state = MPEG_PLAYER_PLAYING;
+    }
   if (m_frameBuffer.empty ())
     {
       NS_LOG_INFO (Simulator::Now ().GetSeconds () << " No frames to play");
@@ -172,8 +182,8 @@ MpegPlayer::PlayFrame (void)
   MPEGHeader mpeg_header;
   HTTPHeader http_header;
 
-  message->RemoveHeader (mpeg_header);
   message->RemoveHeader (http_header);
+  message->RemoveHeader (mpeg_header);
 
   m_totalRate += http_header.GetResolution ();
   if (http_header.GetSegmentId () > 0) // Discard the first segment for the minRate
@@ -186,14 +196,15 @@ MpegPlayer::PlayFrame (void)
   /*std::cerr << "res= " << http_header.GetResolution() << " tot="
      << m_totalRate << " played=" << m_framesPlayed << std::endl;*/
 
-  Time b_t = GetRealPlayTime (mpeg_header.GetPlaybackTime ());
+  // Time b_t = GetRealPlayTime (mpeg_header.GetPlaybackTime ()) + Seconds(m_frameBuffer.size() * MPEG_TIME_BETWEEN_FRAMES);
 
-  if (m_bufferDelay > Time ("0s") && b_t < m_bufferDelay && m_dashClient)
-    {
-      m_dashClient->RequestSegment ();
-      m_bufferDelay = Seconds (0);
-      // m_dashClient = NULL;
-    }
+  // if (m_bufferDelay > Time ("0s") && b_t < m_bufferDelay && m_dashClient)
+  //   {
+  //     NS_LOG_INFO("Requesting frame due low buffer time, b_t = " <<  b_t << " m_bufferDelay = " <<  m_bufferDelay);
+  //     m_dashClient->RequestSegment ();
+  //     m_bufferDelay = Seconds (0);
+  //     // m_dashClient = NULL;
+  //   }
 
   NS_LOG_INFO (Simulator::Now ().GetSeconds ()
                << " PLAYING FRAME: "
@@ -201,8 +212,9 @@ MpegPlayer::PlayFrame (void)
                << http_header.GetSegmentId () << " Res: " << http_header.GetResolution ()
                << " FrameId: " << mpeg_header.GetFrameId ()
                << " PlayTime: " << mpeg_header.GetPlaybackTime ().GetSeconds ()
-               << " Type: " << (char) mpeg_header.GetType () << " interTime: "
-               << m_interruption_time.GetSeconds () << " queueLength: " << m_frameBuffer.size ());
+               << " Type: " << (char) mpeg_header.GetType () << " Size: " << mpeg_header.GetSize ()
+               << " interTime: " << m_interruption_time.GetSeconds ()
+               << " queueLength: " << m_frameBuffer.size ());
 
   /*   std::cout << " frId: " << mpeg_header.GetFrameId()
      << " playtime: " << mpeg_header.GetPlaybackTime()

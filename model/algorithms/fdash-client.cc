@@ -178,6 +178,18 @@ FdashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
         }
     }
 
+  if (nextRate == rates[rates_size - 1])
+    {
+      double time_to_download = nextRate * MPEG_TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT /
+                                1000.0 / m_bitrateEstimate;
+      double sleep_time = currDt - t - time_to_download;
+      NS_LOG_INFO ("time_to_download =  " << time_to_download << " sleep_time =  " << sleep_time);
+      if (sleep_time > 0)
+        {
+          delay = Seconds (sleep_time);
+        }
+    }
+
   NS_LOG_INFO (currRate << " " << output << " " << result);
 
   /*result = result > 100000 ? result : 100000;

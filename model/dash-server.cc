@@ -30,7 +30,7 @@
 #include "ns3/socket-factory.h"
 #include "ns3/packet.h"
 #include "ns3/trace-source-accessor.h"
-#include "ns3/udp-socket-factory.h"
+#include "ns3/tcp-socket-factory.h"
 #include "dash-server.h"
 #include "http-header.h"
 #include "mpeg-header.h"
@@ -52,7 +52,7 @@ DashServer::GetTypeId (void)
           .AddAttribute ("Local", "The Address on which to Bind the rx socket.", AddressValue (),
                          MakeAddressAccessor (&DashServer::m_local), MakeAddressChecker ())
           .AddAttribute ("Protocol", "The type id of the protocol to use for the rx socket.",
-                         TypeIdValue (UdpSocketFactory::GetTypeId ()),
+                         TypeIdValue (TcpSocketFactory::GetTypeId ()),
                          MakeTypeIdAccessor (&DashServer::m_tid), MakeTypeIdChecker ())
           .AddTraceSource ("Rx", "A packet has been received",
                            MakeTraceSourceAccessor (&DashServer::m_rxTrace),
@@ -60,11 +60,9 @@ DashServer::GetTypeId (void)
   return tid;
 }
 
-DashServer::DashServer ()
+DashServer::DashServer () : m_socket (0), m_totalRx (0)
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_totalRx = 0;
 }
 
 DashServer::~DashServer ()
@@ -211,43 +209,64 @@ void
 DashServer::DataSend (Ptr<Socket> socket, uint32_t)
 {
   NS_LOG_FUNCTION (this);
-  for (std::map<Ptr<Socket>, std::queue<Packet>>::iterator iter = m_queues.begin ();
-       iter != m_queues.end (); ++iter)
-    {
-      HTTPHeader httpHeader;
-      MPEGHeader mpegHeader;
 
-      if (iter->second.size ())
-        {
-          Ptr<Packet> frame = iter->second.front ().Copy ();
+  // for (std::map<Ptr<Socket>, std::queue<Packet>>::iterator iter = m_queues.begin ();
+  //      iter != m_queues.end (); ++iter)
+  //   {
+  //     HTTPHeader httpHeader;
+  //     MPEGHeader mpegHeader;
 
-          frame->RemoveHeader (mpegHeader);
-          frame->RemoveHeader (httpHeader);
+  //     if (iter->second.size ())
+  //       {
+  //         Ptr<Packet> frame = iter->second.front ().Copy ();
 
-          NS_LOG_INFO ("VidId: " << httpHeader.GetVideoId ()
-                                 << " rxAv= " << iter->first->GetRxAvailable ()
-                                 << " queue= " << iter->second.size ()
-                                 << " res= " << httpHeader.GetResolution ());
-        }
-    }
+  //         frame->RemoveHeader (mpegHeader);
+  //         frame->RemoveHeader (httpHeader);
+
+  //         NS_LOG_INFO ("VidId: " << httpHeader.GetVideoId ()
+  //                                << " rxAv= " << iter->first->GetRxAvailable ()
+  //                                << " queue= " << iter->second.size ()
+  //                                << " res= " << httpHeader.GetResolution ());
+  //       }
+  //   }
 
   while (!m_queues[socket].empty ())
     {
-      int bytes;
-      Ptr<Packet> frame = m_queues[socket].front ().Copy ();
-      if ((bytes = socket->Send (frame)) != (int) frame->GetSize ())
-        {
-          NS_LOG_INFO ("Could not send frame");
-          if (bytes != -1)
-            {
-              NS_FATAL_ERROR ("Oops, we sent half a frame :(");
-            }
-          break;
-        }
-      m_queues[socket].pop ();
-    }
+      uint32_t max_tx_size = socket->GetTxAvailable ();
 
-  NS_LOG_INFO ("DATA WAS JUST SENT!!!");
+      if (max_tx_size <= 0)
+        {
+          NS_LOG_INFO ("Socket Send buffer is full");
+          return;
+        }
+
+      Ptr<Packet> frame = m_queues[socket].front ().Copy ();
+      m_queues[socket].pop_front ();
+
+      uint32_t init_size = frame->GetSize ();
+
+      if (max_tx_size < init_size)
+        {
+          NS_LOG_INFO ("Insufficient space in send buffer, fragmenting");
+          Ptr<Packet> frag0 = frame->CreateFragment (0, max_tx_size);
+          Ptr<Packet> frag1 = frame->CreateFragment (max_tx_size, init_size - max_tx_size);
+
+          m_queues[socket].push_front (*frag1);
+          frame = frag0;
+        }
+
+      uint32_t bytes;
+      if ((bytes = socket->Send (frame)) < frame->GetSize ())
+        {
+          NS_FATAL_ERROR ("Couldn't send packet, though space should be available");
+          exit (1);
+        }
+      else
+        {
+          NS_LOG_INFO ("Just sent " << frame->GetSerializedSize () << " " << frame->GetSize ());
+          //socket->Send(Create<Packet>(0));
+        }
+    }
 }
 
 void
@@ -263,10 +282,10 @@ DashServer::SendSegment (uint32_t video_id, uint32_t resolution, uint32_t segmen
 
   frame_size_gen->SetAttribute ("Min", DoubleValue (0));
   frame_size_gen->SetAttribute (
-      "Max", DoubleValue (std::max (std::min (2 * avg_packetsize, MPEG_MAX_MESSAGE) -
-                                        (int) (mpeg_header_tmp.GetSerializedSize () +
-                                               http_header_tmp.GetSerializedSize ()),
-                                    1)));
+      "Max",
+      DoubleValue (std::max (2 * avg_packetsize - (int) (mpeg_header_tmp.GetSerializedSize () +
+                                                         http_header_tmp.GetSerializedSize ()),
+                             1)));
 
   for (uint32_t f_id = 0; f_id < MPEG_FRAMES_PER_SEGMENT; f_id++)
     {
@@ -286,13 +305,13 @@ DashServer::SendSegment (uint32_t video_id, uint32_t resolution, uint32_t segmen
       mpeg_header.SetSize (frame_size);
 
       Ptr<Packet> frame = Create<Packet> (frame_size);
-      frame->AddHeader (http_header);
       frame->AddHeader (mpeg_header);
+      frame->AddHeader (http_header);
       NS_LOG_INFO ("SENDING PACKET "
                    << f_id << " " << frame->GetSize () << " res=" << http_header.GetResolution ()
                    << " size=" << mpeg_header.GetSize () << " avg=" << avg_packetsize);
 
-      m_queues[socket].push (*frame);
+      m_queues[socket].push_back (*frame);
     }
   DataSend (socket, 0);
 }

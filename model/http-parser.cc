@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("HttpParser");
 
 namespace ns3 {
 
-HttpParser::HttpParser () : m_bytes (0), m_app (NULL), m_lastmeasurement ("0s")
+HttpParser::HttpParser () : m_app (NULL), m_lastmeasurement ("0s")
 {
   NS_LOG_FUNCTION (this);
 }
@@ -48,72 +48,75 @@ HttpParser::SetApp (DashClient *app)
   NS_LOG_FUNCTION (this << app);
   m_app = app;
 }
+
 void
 HttpParser::ReadSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  Address from;
-  int bytes = socket->RecvFrom (&m_buffer[m_bytes], MPEG_MAX_MESSAGE - m_bytes, 0, from);
+  Ptr<Packet> pkt = socket->Recv ();
 
-  MPEGHeader mpeg_header;
-  HTTPHeader http_header;
-
-  uint32_t headersize = mpeg_header.GetSerializedSize () + http_header.GetSerializedSize ();
-
-  NS_LOG_INFO ("### we read bytes: " << bytes);
-  if (bytes > 0)
+  if (pkt == NULL)
     {
-      m_bytes += bytes;
+      NS_LOG_INFO ("Received NULL packet");
+      return;
+    }
 
-      if (m_lastmeasurement > Time ("0s"))
+  if (m_pending_packet == NULL)
+    {
+      m_pending_packet = pkt;
+    }
+  else
+    {
+      m_pending_packet->AddAtEnd (pkt);
+    }
+
+  TryToPushToPlayer ();
+}
+
+void
+HttpParser::TryToPushToPlayer ()
+{
+  NS_LOG_FUNCTION (this);
+
+  while (true)
+    {
+      MPEGHeader mpeg_header;
+      HTTPHeader http_header;
+      uint32_t headersize = mpeg_header.GetSerializedSize () + http_header.GetSerializedSize ();
+
+      if (m_pending_packet->GetSize () < headersize)
         {
-          NS_LOG_INFO (Simulator::Now ().GetSeconds ()
-                       << " bytes: " << bytes << " dt: "
-                       << (Simulator::Now () - m_lastmeasurement).GetSeconds () << " bitrate: "
-                       << (8 * (bytes + headersize) /
-                           (Simulator::Now () - m_lastmeasurement).GetSeconds ()));
+          NS_LOG_INFO ("### Headers incomplete ");
+          return;
         }
-      m_lastmeasurement = Simulator::Now ();
-    }
 
-  NS_LOG_INFO ("### Buffer space: " << m_bytes << " Queue length "
-                                    << m_app->GetPlayer ().GetQueueSize ());
+      Ptr<Packet> headerPacket = m_pending_packet->Copy ();
+      headerPacket->RemoveHeader (http_header);
+      headerPacket->RemoveHeader (mpeg_header);
 
-  if (m_bytes < headersize)
-    {
-      return;
-    }
+      m_pending_message_size = headersize + mpeg_header.GetSize ();
 
-  Packet headerPacket (m_buffer, headersize);
-  headerPacket.RemoveHeader (mpeg_header);
+      if (m_pending_packet->GetSize () < m_pending_message_size)
+        {
+          NS_LOG_INFO ("### Packet incomplete ");
+          return;
+        }
 
-  uint32_t message_size = headersize + mpeg_header.GetSize ();
-  NS_LOG_INFO ("### message size: " << message_size);
-
-  if (m_bytes < message_size)
-    {
-      NS_LOG_INFO ("### Not enough bytes, returning: m_bytes=" << m_bytes
-                                                               << " message_size=" << message_size);
-      return;
-    }
-  else
-    {
-      NS_LOG_INFO ("### We have enough bytes, NOT returning: m_bytes="
-                   << m_bytes << " message_size=" << message_size);
-    }
-
-  Packet message (m_buffer, message_size);
-  if (m_app->MessageReceived (message))
-    {
-      NS_LOG_INFO ("### I am in:  m_bytes=" << m_bytes << " message_size=" << message_size);
-      memmove (m_buffer, &m_buffer[message_size], m_bytes - message_size);
-      m_bytes -= message_size;
-      NS_LOG_INFO ("ENQUEDE MESSAGE!!!! " << mpeg_header.GetFrameId ());
-      ReadSocket (socket);
-    }
-  else
-    {
-      NS_LOG_INFO ("BUFFER IS FULL!!!!");
+      Ptr<Packet> message = m_pending_packet->CreateFragment (0, m_pending_message_size);
+      uint32_t total_size = m_pending_packet->GetSize ();
+      if (m_app->MessageReceived (*message))
+        {
+          NS_LOG_INFO ("### Message received by mpeg_player ");
+          Ptr<Packet> remainder = m_pending_packet->CreateFragment (
+              m_pending_message_size, total_size - m_pending_message_size);
+          m_pending_packet = remainder;
+        }
+      else
+        {
+          NS_LOG_INFO ("### Player Buffer is full ");
+          return;
+        }
     }
 }
+
 } // namespace ns3

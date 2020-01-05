@@ -94,7 +94,7 @@ private:
   TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
 
   // A structure that contains the generated MPEG frames, for each client.
-  std::map<Ptr<Socket>, std::queue<Packet>> m_queues;
+  std::map<Ptr<Socket>, std::deque<Packet>> m_queues;
 };
 
 } // namespace ns3

@@ -22,6 +22,7 @@
 #define HTTP_PARSER_H_
 
 #include <ns3/ptr.h>
+#include <ns3/packet.h>
 #include "mpeg-header.h"
 
 namespace ns3 {
@@ -36,13 +37,15 @@ public:
   virtual ~HttpParser ();
   void ReadSocket (Ptr<Socket> socket);
   void SetApp (DashClient *app);
+  void TryToPushToPlayer ();
 
 private:
-  uint8_t m_buffer[MPEG_MAX_MESSAGE];
-  uint32_t m_bytes;
   DashClient *m_app;
 
   Time m_lastmeasurement;
+
+  Ptr<Packet> m_pending_packet = NULL;
+  uint32_t m_pending_message_size = 0;
 };
 
 } // namespace ns3

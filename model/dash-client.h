@@ -155,7 +155,7 @@ private:
   TypeId m_tid;
   TracedCallback<Ptr<const Packet>> m_txTrace;
   uint32_t m_videoId; // The Id of the video that is requested
-  Time m_startedReceiving; // Time of reception of the first MPEG frame
+  Time m_started; // Time of application starting
   Time m_sumDt; // Used for calculating the average buffering time
   Time m_lastDt; // The previous buffering time (used for calculating the differential
   static int m_countObjs; // Number of DashClient instances (for generating unique id
@@ -165,6 +165,7 @@ private:
   uint32_t m_bitRate; // The bitrate of the current segment.
   Time m_window;
   Time m_segmentFetchTime;
+  bool m_RequestPending = false; // So that we don't request the same segment repeatedly
 };
 
 } // namespace ns3
