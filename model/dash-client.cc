@@ -213,7 +213,7 @@ void
 DashClient::CheckBuffer ()
 {
   NS_LOG_FUNCTION (this);
-  m_parser.TryToPushToPlayer ();
+  m_parser.ReadSocket(m_socket);
 }
 
 void

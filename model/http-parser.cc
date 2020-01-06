@@ -53,6 +53,28 @@ void
 HttpParser::ReadSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+
+  if (m_pending_packet)
+    {
+      TryToPushToPlayer ();
+    }
+
+  if (m_pending_packet && m_pending_packet->GetSize () >= m_pending_message_size)
+    {
+      NS_LOG_INFO ("Not reading socket, our play buffer is likely full ");
+      // Send dummy packet to prevent deadlock
+      // due to TCP "Silly Window"
+      // See also: https://www.nsnam.org/bugzilla/show_bug.cgi?id=1565
+      socket->Send (Create<Packet> (1));
+      return;
+    }
+
+  if (socket->GetRxAvailable () <= 0)
+    {
+      NS_LOG_INFO ("Not reading socket, nothing to read");
+      return;
+    }
+
   Ptr<Packet> pkt = socket->Recv ();
 
   if (pkt == NULL)
@@ -95,6 +117,9 @@ HttpParser::TryToPushToPlayer ()
       headerPacket->RemoveHeader (mpeg_header);
 
       m_pending_message_size = headersize + mpeg_header.GetSize ();
+
+      NS_LOG_INFO ("Total size is " << m_pending_packet->GetSize () << " pending message is "
+                                    << m_pending_message_size);
 
       if (m_pending_packet->GetSize () < m_pending_message_size)
         {

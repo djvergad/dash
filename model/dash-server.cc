@@ -153,7 +153,7 @@ DashServer::HandleRead (Ptr<Socket> socket)
   Address from;
   while ((packet = socket->RecvFrom (from)))
     {
-      if (packet->GetSize () == 0)
+      if (packet->GetSize () <= 1)
         { //EOF
           break;
         }
