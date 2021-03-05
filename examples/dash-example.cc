@@ -47,7 +47,7 @@ main (int argc, char *argv[])
   double stopTime = 100.0;
   std::string linkRate = "500Kbps";
   std::string delay = "5ms";
-  std::string algorithm = "ns3::DashClient";
+  std::string algorithm = "ns3::FdashClient";
   uint32_t bufferSpace = 30000000;
   std::string window = "10s";
 

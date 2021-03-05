@@ -347,7 +347,7 @@ DashClient::MessageReceived (Packet message)
                 << " estBitRate: " << GetBitRateEstimate ()
                 << " interTime: " << m_player.m_interruption_time.GetSeconds ()
                 << " T: " << currDt.GetSeconds ()
-                << " dT: " << (m_lastDt >= 0 ? (currDt - m_lastDt).GetSeconds () : 0)
+                << " dT: " << (m_lastDt >= Time("0s") ? (currDt - m_lastDt).GetSeconds () : 0)
                 << " del: " << bufferDelay.GetSeconds () << std::endl;
 
       NS_LOG_INFO ("==== Last frame received. Requesting segment " << m_segmentId);

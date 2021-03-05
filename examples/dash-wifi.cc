@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   double stopTime = 100.0;
   std::string linkRate = "500Kbps";
   std::string delay = "5ms";
-  std::string algorithm = "ns3::DashClient";
+  std::string algorithm = "ns3::FdashClient";
   uint32_t bufferSpace = 30000000;
   std::string window = "10s";
 
@@ -91,11 +91,11 @@ main (int argc, char *argv[])
   wifiStaNodes.Create (nWifi);
 
   YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
-  YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
+  YansWifiPhyHelper phy;
   phy.SetChannel (channel.Create ());
 
   //WifiHelper wifi = WifiHelper::Default();//deprecated
-  WifiHelper wifi = WifiHelper ();
+  WifiHelper wifi;
   wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
   WifiMacHelper mac;
 
@@ -105,7 +105,7 @@ main (int argc, char *argv[])
   MobilityHelper mobility;
   mobility.SetPositionAllocator ("ns3::GridPositionAllocator", "MinX", DoubleValue (0.0), "MinY",
                                  DoubleValue (0.0), "DeltaX", DoubleValue (40.0), "DeltaY",
-                                 DoubleValue (50.0), "GridWidth", UintegerValue (2), "LayoutType",
+                                 DoubleValue (30.0), "GridWidth", UintegerValue (2), "LayoutType",
                                  StringValue ("RowFirst"));
 
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -188,7 +188,7 @@ main (int argc, char *argv[])
    clientApps.Stop(Seconds(9.5));*/
 
   Simulator::Stop (Seconds (stopTime));
-  AnimationInterface anim ("dash-wifi.xml");
+  // AnimationInterface anim ("dash-wifi.xml");
   Simulator::Run ();
   Simulator::Destroy ();
 

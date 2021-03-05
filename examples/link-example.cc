@@ -85,7 +85,7 @@ main (int argc, char *argv[])
   std::string delay = "5ms";
   std::string switchTime = "0s";
   std::string switchStart = "190s";
-  std::string algorithm = "ns3::DashClient";
+  std::string algorithm = "ns3::FdashClient";
   std::string window = "10s";
   uint32_t bufferSpace = 30000000;
 

@@ -131,8 +131,7 @@ FemtocellBlockAllocator::Create ()
       box.yMin = m_yMinVar->GetValue ();
       box.yMax = box.yMin + m_ySize;
       ++attempt;
-    }
-  while (OverlapsWithAnyPrevious (box));
+  } while (OverlapsWithAnyPrevious (box));
 
   NS_LOG_LOGIC ("allocated non overlapping block " << box);
   m_previousBlocks.push_back (box);
@@ -303,7 +302,7 @@ static ns3::GlobalValue g_homeEnbBandwidth ("homeEnbBandwidth", "bandwidth [num 
                                             ns3::UintegerValue (25),
                                             ns3::MakeUintegerChecker<uint16_t> ());
 static ns3::GlobalValue g_simTime ("simTime", "Total duration of the simulation [s]",
-                                   ns3::DoubleValue (0.25), ns3::MakeDoubleChecker<double> ());
+                                   ns3::DoubleValue (25), ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue
     g_generateRem ("generateRem",
                    "if true, will generate a REM and then abort the simulation;"
@@ -321,7 +320,7 @@ static ns3::GlobalValue
            "with real IP applications over PDCP and RLC UM (or RLC AM by changing "
            "the default value of EpsBearerToRlcMapping e.g. to RLC_AM_ALWAYS). "
            "If false, only the LTE radio access will be simulated with RLC SM. ",
-           ns3::BooleanValue (false), ns3::MakeBooleanChecker ());
+           ns3::BooleanValue (true), ns3::MakeBooleanChecker ());
 static ns3::GlobalValue
     g_epcDl ("epcDl",
              "if true, will activate data flows in the downlink when EPC is being used. "
@@ -339,7 +338,7 @@ static ns3::GlobalValue
               "if true, the UdpClient application will be used. "
               "Otherwise, the BulkSend application will be used over a TCP connection. "
               "If EPC is not used, this parameter will be ignored.",
-              ns3::BooleanValue (true), ns3::MakeBooleanChecker ());
+              ns3::BooleanValue (false), ns3::MakeBooleanChecker ());
 static ns3::GlobalValue g_useDash ("useDash",
                                    "if true, the DashClient application will be used. "
                                    "If EPC is not used, this parameter will be ignored.",
@@ -923,8 +922,6 @@ main (int argc, char *argv[])
             }
         }
     }
-
-  BuildingsHelper::MakeMobilityModelConsistent ();
 
   Ptr<RadioEnvironmentMapHelper> remHelper;
   if (generateRem)
