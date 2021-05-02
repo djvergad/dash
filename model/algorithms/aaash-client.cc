@@ -36,13 +36,6 @@ AaashClient::~AaashClient ()
 void
 AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 {
-  uint32_t rates[] =
-      /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
-     274399, 384159, 537823 };*/
-      {45000,  89000,   131000,  178000,  221000,  263000,  334000,  396000,  522000,  595000,
-       791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000, 3527000, 3840000, 4220000};
-
-  uint32_t rates_size = sizeof (rates) / sizeof (rates[0]);
 
   double a1 = 0.75;
   double a2 = 0.33;
@@ -60,8 +53,8 @@ AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
   Time b_t = m_bufferState.rbegin ()->second;
   // std::cerr << "bt= " << b_t.GetSeconds() << std::endl;
 
-  uint32_t rateInd = rates_size;
-  for (uint32_t i = 0; i < rates_size; i++)
+  uint32_t rateInd = rates.size ();
+  for (uint32_t i = 0; i < rates.size (); i++)
     {
       if (rates[i] == currRate)
         {
@@ -69,7 +62,7 @@ AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
           break;
         }
     }
-  if (rateInd == rates_size)
+  if (rateInd == rates.size ())
     {
       NS_FATAL_ERROR ("Wrong rate");
     }
@@ -79,7 +72,7 @@ AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
 
   uint32_t r_up = rates[rateInd];
   uint32_t r_down = rates[rateInd];
-  if (rateInd + 1 < rates_size)
+  if (rateInd + 1 < rates.size ())
     {
       r_up = rates[rateInd + 1];
     }
@@ -90,7 +83,7 @@ AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
 
   /*std::cerr << "bufinc: " << BufferInc() << " FastStart: "
      << m_running_fast_start << std::endl;*/
-  if (m_running_fast_start && (rateInd != rates_size - 1) && BufferInc () &&
+  if (m_running_fast_start && (rateInd != rates.size () - 1) && BufferInc () &&
       (currRate <= a1 * m_bitrateEstimate))
     {
       if (b_t < b_min)
@@ -135,14 +128,14 @@ AaashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
         }
       else if (b_t < b_high)
         {
-          if ((currRate == rates[rates_size - 1]) || (r_up >= a5 * m_bitrateEstimate))
+          if ((currRate == rates.back ()) || (r_up >= a5 * m_bitrateEstimate))
             {
               delay = std::max (b_t - taf, b_opt);
             }
         }
       else
         {
-          if ((currRate == rates[rates_size - 1]) || (r_up >= a5 * m_bitrateEstimate))
+          if ((currRate == rates.back ()) || (r_up >= a5 * m_bitrateEstimate))
             {
               delay = std::max (b_t - taf, b_opt);
             }

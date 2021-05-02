@@ -36,14 +36,6 @@ SftmClient::~SftmClient ()
 void
 SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 {
-  uint32_t rates[] =
-      /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
-     274399, 384159, 537823 };*/
-      {45000,  89000,   131000,  178000,  221000,  263000,  334000,  396000,  522000,  595000,
-       791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000, 3527000, 3840000, 4220000};
-
-  uint32_t rates_size = sizeof (rates) / sizeof (rates[0]);
-
   // Media Segment duration
   double msd = MPEG_FRAMES_PER_SEGMENT * MPEG_TIME_BETWEEN_FRAMES / 1000.0;
   double sft = GetSegmentFetchTime (); // Segment fetch time
@@ -66,8 +58,8 @@ SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 
   double sftm = std::min (msd, rsft) / sft;
 
-  uint32_t rateInd = rates_size; // The index of the current rate
-  for (uint32_t i = 0; i < rates_size; i++)
+  uint32_t rateInd = rates.size (); // The index of the current rate
+  for (uint32_t i = 0; i < rates.size (); i++)
     {
       if (rates[i] == currRate)
         {
@@ -75,17 +67,17 @@ SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
           break;
         }
     }
-  if (rateInd == rates_size)
+  if (rateInd == rates.size ())
     {
       NS_FATAL_ERROR ("Wrong rate");
     }
 
-  double ec_u = rateInd < rates_size - 1
+  double ec_u = rateInd < rates.size () - 1
                     ? (1.0 * rates[rateInd + 1] - rates[rateInd]) / rates[rateInd]
                     : std::numeric_limits<double>::max ();
 
   double emax_u = 0;
-  for (uint32_t i = 0; i < rates_size - 1; i++)
+  for (uint32_t i = 0; i < rates.size () - 1; i++)
     {
       double e = (1.0 * rates[i + 1] - rates[i]) / rates[i];
       emax_u = std::max (emax_u, e);
@@ -96,7 +88,7 @@ SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
   double ec_d = rateInd > 0 ? (1.0 * rates[rateInd] - rates[rateInd - 1]) / rates[rateInd] : 1.0;
 
   double emin_d = std::numeric_limits<double>::max ();
-  for (uint32_t i = 1; i < rates_size; i++)
+  for (uint32_t i = 1; i < rates.size (); i++)
     {
       double e = (1.0 * rates[i] - rates[i - 1]) / rates[i];
       emin_d = std::min (emin_d, e);
@@ -104,7 +96,7 @@ SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 
   double e_d = std::max (2 * emin_d, ec_d);
 
-  if (sftm > 1 + e_u && rateInd < rates_size - 1) // Switch up
+  if (sftm > 1 + e_u && rateInd < rates.size () - 1) // Switch up
     {
       nextRate = rates[rateInd + 1];
     }
@@ -122,7 +114,7 @@ SftmClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 
   double bmt_min = 0;
   double bmt_c = GetBufferEstimate ();
-  double b_max = rates[rates_size - 1];
+  double b_max = rates.back ();
   double b_min = rates[0];
   double t_id = bmt_c - bmt_min - msd * b_max / b_min;
 

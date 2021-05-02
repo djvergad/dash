@@ -36,11 +36,6 @@ SvaaClient::~SvaaClient ()
 void
 SvaaClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 {
-  uint32_t rates[] = {45000,   89000,   131000,  178000,  221000,  263000,  334000,
-                      396000,  522000,  595000,  791000,  1033000, 1245000, 1547000,
-                      2134000, 2484000, 3079000, 3527000, 3840000, 4220000};
-
-  uint32_t rates_size = sizeof (rates) / sizeof (rates[0]);
   double diff = GetBufferDifferential ();
 
   double q_tk = GetBufferEstimate ();
@@ -81,7 +76,7 @@ SvaaClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 
   if (q_tk < q_ref / 2)
     {
-      int i = rates_size - 1;
+      int i = rates.size () - 1;
       while (rates[i] > t_k && i > 0)
         {
           i--;
@@ -95,7 +90,7 @@ SvaaClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
       m_counter++;
       if (m_counter > m)
         {
-          int i = rates_size - 1;
+          int i = rates.size () - 1;
           while (rates[i] > t_k && i > 0)
             {
               i--;

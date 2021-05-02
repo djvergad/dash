@@ -36,11 +36,6 @@ OsmpClient::~OsmpClient ()
 void
 OsmpClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 {
-  uint32_t rates[] = {45000,   89000,   131000,  178000,  221000,  263000,  334000,
-                      396000,  522000,  595000,  791000,  1033000, 1245000, 1547000,
-                      2134000, 2484000, 3079000, 3527000, 3840000, 4220000};
-
-  uint32_t rates_size = sizeof (rates) / sizeof (rates[0]);
 
   std::map<Time, Time>::iterator it;
   it = m_bufferState.end ();
@@ -65,7 +60,7 @@ OsmpClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
 
   int l_nxt = 0; // The next quality level
   int l_min = 0; // The lowest quality level
-  int l_max = rates_size - 1; // The highest quality level;
+  int l_max = rates.size () - 1; // The highest quality level;
 
   double r_download = 100;
   if (t_last_frag.GetMilliSeconds () > 0)
@@ -100,8 +95,7 @@ OsmpClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
               do
                 {
                   l_nxt = l_nxt + 1;
-                }
-              while (!(l_nxt == l_max || r_download < ((1.0 * rates[l_nxt + 1]) / rates[l_cur])));
+              } while (!(l_nxt == l_max || r_download < ((1.0 * rates[l_nxt + 1]) / rates[l_cur])));
             }
         }
     }

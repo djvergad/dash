@@ -114,23 +114,16 @@ FdashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
 
   result = output * m_bitrateEstimate;
 
-  uint32_t rates[] =
-      /*  { 13281, 18593, 26030, 36443, 51020, 71428, 100000, 140000, 195999,
-     274399, 384159, 537823 };*/
-      {45000,  89000,   131000,  178000,  221000,  263000,  334000,  396000,  522000,  595000,
-       791000, 1033000, 1245000, 1547000, 2134000, 2484000, 3079000, 3527000, 3840000, 4220000};
+  nextRate = rates.front ();
 
-  uint32_t rates_size = sizeof (rates) / sizeof (rates[0]);
-
-  uint32_t i;
-
-  nextRate = rates[0];
-
-  for (i = 0; i < rates_size; i++)
+  for (uint32_t rate : rates)
     {
-      if (result > rates[i])
+      NS_LOG_INFO ("result: " << result << " rate: " << rate);
+      if (result > rate)
         {
-          nextRate = rates[i];
+          NS_LOG_INFO ("nextRate: " << nextRate);
+
+          nextRate = rate;
         }
     }
 
@@ -178,7 +171,7 @@ FdashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
         }
     }
 
-  if (nextRate == rates[rates_size - 1])
+  if (nextRate == rates.back ())
     {
       double time_to_download = nextRate * MPEG_TIME_BETWEEN_FRAMES * MPEG_FRAMES_PER_SEGMENT /
                                 1000.0 / m_bitrateEstimate;
