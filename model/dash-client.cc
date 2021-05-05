@@ -106,12 +106,14 @@ DashClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_socket = 0;
+  m_keepAliveTimer.Cancel ();
   // chain up
   Application::DoDispose ();
 }
 
 // Application Methods
-void DashClient::StartApplication (void) // Called at time specified by Start
+void
+DashClient::StartApplication (void) // Called at time specified by Start
 {
   NS_LOG_FUNCTION (this);
 
@@ -149,12 +151,16 @@ void DashClient::StartApplication (void) // Called at time specified by Start
       m_socket->SetConnectCallback (MakeCallback (&DashClient::ConnectionSucceeded, this),
                                     MakeCallback (&DashClient::ConnectionFailed, this));
       m_socket->SetSendCallback (MakeCallback (&DashClient::DataSend, this));
+      m_socket->SetCloseCallbacks (MakeCallback (&DashClient::ConnectionNormalClosed, this),
+                                   MakeCallback (&DashClient::ConnectionErrorClosed, this));
+
       NS_LOG_INFO ("Connected callbacks");
     }
   NS_LOG_INFO ("Just started connection");
 }
 
-void DashClient::StopApplication (void) // Called at time specified by Stop
+void
+DashClient::StopApplication (void) // Called at time specified by Stop
 {
   NS_LOG_FUNCTION (this);
 
@@ -213,14 +219,31 @@ void
 DashClient::CheckBuffer ()
 {
   NS_LOG_FUNCTION (this);
-  m_parser.ReadSocket(m_socket);
+  m_parser.ReadSocket (m_socket);
+}
+
+void
+DashClient::KeepAliveTimeout ()
+{
+  if (m_socket != NULL)
+    {
+      m_socket->Send (Create<Packet> (1));
+    }
+  else
+    {
+      m_keepAliveTimer.Cancel ();
+      Time delay = MilliSeconds (300);
+      m_keepAliveTimer = Simulator::Schedule (delay, &DashClient::KeepAliveTimeout, this);
+    }
 }
 
 void
 DashClient::HandleRead (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-
+  m_keepAliveTimer.Cancel ();
+  Time delay = MilliSeconds (300);
+  m_keepAliveTimer = Simulator::Schedule (delay, &DashClient::KeepAliveTimeout, this);
   m_parser.ReadSocket (socket);
 }
 
@@ -230,6 +253,9 @@ DashClient::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("DashClient Connection succeeded");
   m_connected = true;
+  socket->SetCloseCallbacks (MakeCallback (&DashClient::ConnectionNormalClosed, this),
+                             MakeCallback (&DashClient::ConnectionErrorClosed, this));
+
   RequestSegment ();
 }
 
@@ -243,6 +269,23 @@ DashClient::ConnectionFailed (Ptr<Socket> socket)
   StartApplication ();
 }
 
+void
+DashClient::ConnectionNormalClosed (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_INFO ("DashClient " << m_id << ", Connection closed normally");
+}
+
+void
+DashClient::ConnectionErrorClosed (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_INFO ("DashClient " << m_id << ", Connection closed due to error, retrying...");
+  m_socket = 0;
+  m_connected = false;
+  StartApplication ();
+}
+
 void DashClient::DataSend (Ptr<Socket>, uint32_t)
 {
   NS_LOG_FUNCTION (this);
@@ -250,11 +293,11 @@ void DashClient::DataSend (Ptr<Socket>, uint32_t)
   if (m_connected)
     { // Only send new data if the connection has completed
 
-      NS_LOG_INFO ("Something was sent");
+      NS_LOG_INFO ("DashClient " << m_id << ", Something was sent");
     }
   else
     {
-      NS_LOG_INFO ("NOT CONNECTED!!!!");
+      NS_LOG_INFO ("DashClient " << m_id << ", NOT CONNECTED!!!!");
     }
 }
 
@@ -347,7 +390,7 @@ DashClient::MessageReceived (Packet message)
                 << " estBitRate: " << GetBitRateEstimate ()
                 << " interTime: " << m_player.m_interruption_time.GetSeconds ()
                 << " T: " << currDt.GetSeconds ()
-                << " dT: " << (m_lastDt >= Time("0s") ? (currDt - m_lastDt).GetSeconds () : 0)
+                << " dT: " << (m_lastDt >= Time ("0s") ? (currDt - m_lastDt).GetSeconds () : 0)
                 << " del: " << bufferDelay.GetSeconds () << std::endl;
 
       NS_LOG_INFO ("==== Last frame received. Requesting segment " << m_segmentId);

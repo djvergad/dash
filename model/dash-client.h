@@ -59,6 +59,7 @@ class DashClient : public Application
 {
   friend class MpegPlayer;
   friend class HttpParser;
+  friend class Socket;
 
 public:
   static TypeId GetTypeId (void);
@@ -142,6 +143,10 @@ private:
   virtual void StopApplication (void); // Called at time specified by Stop
   void ConnectionSucceeded (Ptr<Socket> socket); // Called when the connections has succeeded
   void ConnectionFailed (Ptr<Socket> socket); // Called when the connection has failed.
+  void
+  ConnectionNormalClosed (Ptr<Socket> socket); // Called when the connection has closed normally.
+  void
+  ConnectionErrorClosed (Ptr<Socket> socket); // Called when the connection has closed due to error.
   void DataSend (Ptr<Socket>, uint32_t); // Called when the data has been transmitted
   void HandleRead (Ptr<Socket>); // Called when we receive data from the server
   virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
@@ -150,6 +155,8 @@ private:
   {
     m_window = time;
   }
+
+  void KeepAliveTimeout ();
 
   HttpParser m_parser; // An HttpParser object for parsing the incoming stream into http messages
   Ptr<Socket> m_socket; // Associated socket
@@ -171,6 +178,8 @@ private:
   Time m_window;
   Time m_segmentFetchTime;
   bool m_RequestPending = false; // So that we don't request the same segment repeatedly
+
+  EventId m_keepAliveTimer;
 };
 
 } // namespace ns3
