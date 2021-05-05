@@ -34,7 +34,7 @@ class DashClient;
 class FrameBuffer
 {
 public:
-  FrameBuffer (uint32_t &capasity);
+  FrameBuffer (uint32_t &capacity);
   bool push (Ptr<Packet> frame);
   Ptr<Packet> pop ();
   int size ();
@@ -49,7 +49,7 @@ private:
 class MpegPlayer
 {
 public:
-  MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capasity);
+  MpegPlayer (Ptr<DashClient> dashClient, uint32_t &capacity);
 
   virtual ~MpegPlayer ();
 
@@ -75,12 +75,12 @@ public:
   uint64_t m_totalRate;
   uint32_t m_minRate;
   uint32_t m_framesPlayed;
+  FrameBuffer m_frameBuffer;
 
 private:
   void PlayFrame ();
 
   Time m_lastpaused;
-  FrameBuffer m_frameBuffer;
   Time m_bufferDelay;
   Ptr<DashClient> m_dashClient;
 };
