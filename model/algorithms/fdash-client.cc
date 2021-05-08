@@ -9,6 +9,8 @@
 #include <ns3/log.h>
 #include <ns3/simulator.h>
 #include <ns3/dash-client.h>
+#include "../mpeg-header.h"
+#include "ns3/data-rate.h"
 
 NS_LOG_COMPONENT_DEFINE ("FdashClient");
 
@@ -31,6 +33,27 @@ FdashClient::FdashClient ()
 FdashClient::~FdashClient ()
 {
   // TODO Auto-generated destructor stub
+}
+
+void
+FdashClient::ForecastDisruption (Time estimatedTime, Time estimatedDuration)
+{
+
+  Time bufferTime = MilliSeconds (MPEG_TIME_BETWEEN_FRAMES) * m_player.m_frameBuffer.size ();
+
+  double can_download_bits = m_bitrateEstimate * estimatedTime.GetSeconds ();
+
+  double newRate = can_download_bits / (Seconds (5) + estimatedDuration - bufferTime).GetSeconds ();
+
+  m_interruptionLimit = newRate;
+
+  // DataRate m_emergency_bitrate =;
+}
+
+void
+FdashClient::CalcedDisruption ()
+{
+  m_interruptionLimit = rates.back ();
 }
 
 void
@@ -113,6 +136,11 @@ FdashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
   uint32_t result = 0;
 
   result = output * m_bitrateEstimate;
+
+  if (result > m_interruptionLimit)
+    {
+      result = m_interruptionLimit;
+    }
 
   nextRate = rates.front ();
 

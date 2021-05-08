@@ -13,6 +13,9 @@ namespace ns3 {
 
 class FdashClient : public DashClient
 {
+  friend class MpegPlayer;
+  friend class FrameBuffer;
+
 public:
   static TypeId GetTypeId (void);
 
@@ -22,8 +25,14 @@ public:
 
   virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
 
+  virtual void ForecastDisruption (Time estimatedTime, Time estimatedDuration);
+
+  virtual void CalcedDisruption ();
+
 private:
   bool BufferInc ();
+
+  double m_interruptionLimit = rates.back ();
 };
 
 } /* namespace ns3 */
