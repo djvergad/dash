@@ -130,6 +130,8 @@ private:
      */
   void RequestSegment ();
 
+  void SendBlank ();
+
   /**
      * \brief Called by the HttpParser when it has received a complete HTTP
      * message containing an MPEG frame.

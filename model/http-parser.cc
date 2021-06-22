@@ -65,7 +65,7 @@ HttpParser::ReadSocket (Ptr<Socket> socket)
       // Send dummy packet to prevent deadlock
       // due to TCP "Silly Window"
       // See also: https://www.nsnam.org/bugzilla/show_bug.cgi?id=1565
-      socket->Send (Create<Packet> (1));
+      m_app->SendBlank();
       return;
     }
 

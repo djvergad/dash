@@ -96,7 +96,8 @@ DashServer::DoDispose (void)
 }
 
 // Application Methods
-void DashServer::StartApplication () // Called at time specified by Start
+void
+DashServer::StartApplication () // Called at time specified by Start
 {
   NS_LOG_FUNCTION (this);
   // Create the socket if not already
@@ -129,7 +130,8 @@ void DashServer::StartApplication () // Called at time specified by Start
                                MakeCallback (&DashServer::HandlePeerError, this));
 }
 
-void DashServer::StopApplication () // Called at time specified by Stop
+void
+DashServer::StopApplication () // Called at time specified by Stop
 {
   NS_LOG_FUNCTION (this);
   while (!m_socketList.empty ()) //these are accepted sockets, close them
@@ -151,18 +153,31 @@ DashServer::HandleRead (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   Ptr<Packet> packet;
   Address from;
+
   while ((packet = socket->RecvFrom (from)))
     {
-      if (packet->GetSize () <= 1)
-        { //EOF
-          break;
-        }
       m_totalRx += packet->GetSize ();
 
-      HTTPHeader header;
-      packet->RemoveHeader (header);
+      if (m_pending_packet == NULL)
+        {
+          m_pending_packet = packet;
+        }
+      else
+        {
+          m_pending_packet->AddAtEnd (packet);
+        }
 
-      SendSegment (header.GetVideoId (), header.GetResolution (), header.GetSegmentId (), socket);
+      HTTPHeader header;
+
+      while (m_pending_packet->GetSize () >= header.GetSerializedSize ())
+        {
+          m_pending_packet->RemoveHeader (header);
+          if (header.GetMessageType () == HTTP_REQUEST)
+            {
+              SendSegment (header.GetVideoId (), header.GetResolution (), header.GetSegmentId (),
+                           socket);
+            }
+        }
 
       if (InetSocketAddress::IsMatchingType (from))
         {

@@ -195,7 +195,7 @@ DashClient::RequestSegment ()
       return;
     }
 
-  Ptr<Packet> packet = Create<Packet> (100);
+  Ptr<Packet> packet = Create<Packet> (0);
 
   HTTPHeader httpHeader;
   httpHeader.SetSeq (1);
@@ -216,6 +216,21 @@ DashClient::RequestSegment ()
 }
 
 void
+DashClient::SendBlank ()
+{
+  HTTPHeader http_header;
+  http_header.SetMessageType (HTTP_BLANK);
+  http_header.SetVideoId (-1);
+  http_header.SetResolution (-1);
+  http_header.SetSegmentId (-1);
+
+  Ptr<Packet> blank_packet = Create<Packet> (0);
+  blank_packet->AddHeader (http_header);
+
+  m_socket->Send (blank_packet);
+}
+
+void
 DashClient::CheckBuffer ()
 {
   NS_LOG_FUNCTION (this);
@@ -227,7 +242,7 @@ DashClient::KeepAliveTimeout ()
 {
   if (m_socket != NULL)
     {
-      m_socket->Send (Create<Packet> (1));
+      SendBlank ();
     }
   else
     {

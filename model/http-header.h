@@ -33,6 +33,8 @@ namespace ns3 {
 
 #define HTTP_REQUEST 0
 #define HTTP_RESPONSE 1
+#define HTTP_BLANK 2
+
 
 class HTTPHeader : public Header
 {

@@ -208,6 +208,7 @@ MpegPlayer::PlayFrame (void)
 
   NS_LOG_INFO (Simulator::Now ().GetSeconds ()
                << " PLAYING FRAME: "
+               << " PlayerId: " << m_dashClient->m_id
                << " VidId: " << http_header.GetVideoId () << " SegId: "
                << http_header.GetSegmentId () << " Res: " << http_header.GetResolution ()
                << " FrameId: " << mpeg_header.GetFrameId ()
