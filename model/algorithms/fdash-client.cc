@@ -43,7 +43,7 @@ FdashClient::ForecastDisruption (Time estimatedTime, Time estimatedDuration)
 
   double can_download_bits = m_bitrateEstimate * estimatedTime.GetSeconds ();
 
-  double newRate = can_download_bits / (Seconds (5) + estimatedDuration - bufferTime).GetSeconds ();
+  double newRate = can_download_bits / (m_target_dt + estimatedDuration - bufferTime).GetSeconds ();
 
   m_interruptionLimit = newRate;
 
@@ -184,7 +184,7 @@ FdashClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay
         }
       /*std::cerr << b_delay.GetSeconds() << std::endl;*/
     }
-  else if (nextRate < currRate)
+  else if (nextRate < currRate && m_interruptionLimit == rates.back ())
     {
       double t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
       //std::cerr << "bef: " << t_60 << std::endl;
