@@ -94,9 +94,7 @@ main (int argc, char *argv[])
   YansWifiPhyHelper phy;
   phy.SetChannel (channel.Create ());
 
-  //WifiHelper wifi = WifiHelper::Default();//deprecated
   WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
   WifiMacHelper mac;
 
   NetDeviceContainer staDevices;
