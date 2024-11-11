@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("HttpParser");
 
 namespace ns3 {
 
-HttpParser::HttpParser () : m_app (NULL), m_lastmeasurement ("0s")
+HttpParser::HttpParser () : m_app (nullptr), m_lastmeasurement ("0s")
 {
   NS_LOG_FUNCTION (this);
 }
@@ -77,13 +77,13 @@ HttpParser::ReadSocket (Ptr<Socket> socket)
 
   Ptr<Packet> pkt = socket->Recv ();
 
-  if (pkt == NULL)
+  if (!pkt)
     {
       NS_LOG_INFO ("Received NULL packet");
       return;
     }
 
-  if (m_pending_packet == NULL)
+  if (!m_pending_packet)
     {
       m_pending_packet = pkt;
     }

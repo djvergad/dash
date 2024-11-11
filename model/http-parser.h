@@ -44,7 +44,7 @@ private:
 
   Time m_lastmeasurement;
 
-  Ptr<Packet> m_pending_packet = NULL;
+  Ptr<Packet> m_pending_packet = nullptr;
   uint32_t m_pending_message_size = 0;
 };
 

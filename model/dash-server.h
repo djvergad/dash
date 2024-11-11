@@ -96,7 +96,7 @@ private:
   // A structure that contains the generated MPEG frames, for each client.
   std::map<Ptr<Socket>, std::deque<Packet>> m_queues;
 
-  Ptr<Packet> m_pending_packet = NULL;
+  Ptr<Packet> m_pending_packet = nullptr;
 };
 
 } // namespace ns3

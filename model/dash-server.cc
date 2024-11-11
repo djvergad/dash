@@ -158,7 +158,7 @@ DashServer::HandleRead (Ptr<Socket> socket)
     {
       m_totalRx += packet->GetSize ();
 
-      if (m_pending_packet == NULL)
+      if (!m_pending_packet)
         {
           m_pending_packet = packet;
         }

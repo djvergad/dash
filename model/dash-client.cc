@@ -164,7 +164,7 @@ DashClient::StopApplication (void) // Called at time specified by Stop
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket != 0)
+  if (m_socket)
     {
       m_socket->Close ();
       m_connected = false;
@@ -240,7 +240,7 @@ DashClient::CheckBuffer ()
 void
 DashClient::KeepAliveTimeout ()
 {
-  if (m_socket != NULL)
+  if (m_socket)
     {
       SendBlank ();
     }
