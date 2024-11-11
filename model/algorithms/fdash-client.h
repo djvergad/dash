@@ -9,30 +9,32 @@
 #define FDASH_CLIENT_H_
 
 #include <ns3/dash-client.h>
-namespace ns3 {
+
+namespace ns3
+{
 
 class FdashClient : public DashClient
 {
-  friend class MpegPlayer;
-  friend class FrameBuffer;
+    friend class MpegPlayer;
+    friend class FrameBuffer;
 
-public:
-  static TypeId GetTypeId (void);
+  public:
+    static TypeId GetTypeId(void);
 
-  FdashClient ();
+    FdashClient();
 
-  virtual ~FdashClient ();
+    virtual ~FdashClient();
 
-  virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
+    virtual void CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay);
 
-  virtual void ForecastDisruption (Time estimatedTime, Time estimatedDuration);
+    virtual void ForecastDisruption(Time estimatedTime, Time estimatedDuration);
 
-  virtual void CalcedDisruption ();
+    virtual void CalcedDisruption();
 
-private:
-  bool BufferInc ();
+  private:
+    bool BufferInc();
 
-  double m_interruptionLimit = rates.back ();
+    double m_interruptionLimit = rates.back();
 };
 
 } /* namespace ns3 */

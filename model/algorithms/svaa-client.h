@@ -9,23 +9,25 @@
 #define SVAA_CLIENT_H_
 
 #include <ns3/dash-client.h>
-namespace ns3 {
+
+namespace ns3
+{
 
 class SvaaClient : public DashClient
 {
-public:
-  static TypeId GetTypeId (void);
+  public:
+    static TypeId GetTypeId(void);
 
-  SvaaClient ();
+    SvaaClient();
 
-  virtual ~SvaaClient ();
+    virtual ~SvaaClient();
 
-  virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
+    virtual void CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay);
 
-private:
-  int m_m_k_1;
-  int m_m_k_2;
-  int m_counter;
+  private:
+    int m_m_k_1;
+    int m_m_k_2;
+    int m_counter;
 };
 
 } /* namespace ns3 */

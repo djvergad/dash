@@ -21,31 +21,33 @@
 #ifndef HTTP_PARSER_H_
 #define HTTP_PARSER_H_
 
-#include <ns3/ptr.h>
-#include <ns3/packet.h>
 #include "mpeg-header.h"
 
-namespace ns3 {
+#include <ns3/packet.h>
+#include <ns3/ptr.h>
+
+namespace ns3
+{
 
 class Socket;
 class DashClient;
 
 class HttpParser
 {
-public:
-  HttpParser ();
-  virtual ~HttpParser ();
-  void ReadSocket (Ptr<Socket> socket);
-  void SetApp (DashClient *app);
-  void TryToPushToPlayer ();
+  public:
+    HttpParser();
+    virtual ~HttpParser();
+    void ReadSocket(Ptr<Socket> socket);
+    void SetApp(DashClient* app);
+    void TryToPushToPlayer();
 
-private:
-  DashClient *m_app;
+  private:
+    DashClient* m_app;
 
-  Time m_lastmeasurement;
+    Time m_lastmeasurement;
 
-  Ptr<Packet> m_pending_packet = nullptr;
-  uint32_t m_pending_message_size = 0;
+    Ptr<Packet> m_pending_packet = nullptr;
+    uint32_t m_pending_message_size = 0;
 };
 
 } // namespace ns3

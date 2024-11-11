@@ -9,18 +9,20 @@
 #define OSMP_CLIENT_H_
 
 #include <ns3/dash-client.h>
-namespace ns3 {
+
+namespace ns3
+{
 
 class OsmpClient : public DashClient
 {
-public:
-  static TypeId GetTypeId (void);
+  public:
+    static TypeId GetTypeId(void);
 
-  OsmpClient ();
+    OsmpClient();
 
-  virtual ~OsmpClient ();
+    virtual ~OsmpClient();
 
-  virtual void CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay);
+    virtual void CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay);
 };
 
 } /* namespace ns3 */

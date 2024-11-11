@@ -6,103 +6,105 @@
  */
 
 #include "osmp-client.h"
+
+#include <ns3/dash-client.h>
 #include <ns3/log.h>
 #include <ns3/simulator.h>
-#include <ns3/dash-client.h>
 
-NS_LOG_COMPONENT_DEFINE ("OsmpClient");
+NS_LOG_COMPONENT_DEFINE("OsmpClient");
 
-namespace ns3 {
-NS_OBJECT_ENSURE_REGISTERED (OsmpClient);
+namespace ns3
+{
+NS_OBJECT_ENSURE_REGISTERED(OsmpClient);
 
 TypeId
-OsmpClient::GetTypeId (void)
+OsmpClient::GetTypeId(void)
 {
-  static TypeId tid =
-      TypeId ("ns3::OsmpClient").SetParent<DashClient> ().AddConstructor<OsmpClient> ();
-  return tid;
+    static TypeId tid =
+        TypeId("ns3::OsmpClient").SetParent<DashClient>().AddConstructor<OsmpClient>();
+    return tid;
 }
 
-OsmpClient::OsmpClient ()
+OsmpClient::OsmpClient()
 {
-  // TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 }
 
-OsmpClient::~OsmpClient ()
+OsmpClient::~OsmpClient()
 {
-  // TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
 
 void
-OsmpClient::CalcNextSegment (uint32_t currRate, uint32_t &nextRate, Time &delay)
+OsmpClient::CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay)
 {
+    std::map<Time, Time>::iterator it;
+    it = m_bufferState.end();
 
-  std::map<Time, Time>::iterator it;
-  it = m_bufferState.end ();
+    it--;
+    Time now = it->first;
 
-  it--;
-  Time now = it->first;
-
-  if (it != m_bufferState.begin ())
+    if (it != m_bufferState.begin())
     {
-      it--;
+        it--;
     }
 
-  // The delivery time of the last fragment
-  Time t_last_frag = now - it->first;
+    // The delivery time of the last fragment
+    Time t_last_frag = now - it->first;
 
-  // The current quality level
-  int l_cur = 0;
-  while (rates[l_cur] != currRate)
+    // The current quality level
+    int l_cur = 0;
+    while (rates[l_cur] != currRate)
     {
-      l_cur++;
+        l_cur++;
     }
 
-  int l_nxt = 0; // The next quality level
-  int l_min = 0; // The lowest quality level
-  int l_max = rates.size () - 1; // The highest quality level;
+    int l_nxt = 0;                // The next quality level
+    int l_min = 0;                // The lowest quality level
+    int l_max = rates.size() - 1; // The highest quality level;
 
-  double r_download = 100;
-  if (t_last_frag.GetMilliSeconds () > 0)
+    double r_download = 100;
+    if (t_last_frag.GetMilliSeconds() > 0)
     {
-      r_download = (1.0 * MPEG_FRAMES_PER_SEGMENT * MPEG_TIME_BETWEEN_FRAMES) /
-                   t_last_frag.GetMilliSeconds ();
+        r_download = (1.0 * MPEG_FRAMES_PER_SEGMENT * MPEG_TIME_BETWEEN_FRAMES) /
+                     t_last_frag.GetMilliSeconds();
     }
 
-  /*    std::cerr << "r_download: " << r_download << "\tratio: "
-     << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;*/
+    /*    std::cerr << "r_download: " << r_download << "\tratio: "
+       << ((1.0 * rates[l_cur - 1]) / rates[l_cur]) << std::endl;*/
 
-  if (r_download < 1)
+    if (r_download < 1)
     {
-      if (l_cur > l_min)
+        if (l_cur > l_min)
         {
-          if (r_download < ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
+            if (r_download < ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
             {
-              l_nxt = l_min;
+                l_nxt = l_min;
             }
-          else
+            else
             {
-              l_nxt = l_cur - 1;
+                l_nxt = l_cur - 1;
             }
         }
     }
-  else
+    else
     {
-      if (l_cur < l_max)
+        if (l_cur < l_max)
         {
-          if (l_cur == 0 || r_download > ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
+            if (l_cur == 0 || r_download > ((1.0 * rates[l_cur - 1]) / rates[l_cur]))
             {
-              do
+                do
                 {
-                  l_nxt = l_nxt + 1;
-              } while (!(l_nxt == l_max || r_download < ((1.0 * rates[l_nxt + 1]) / rates[l_cur])));
+                    l_nxt = l_nxt + 1;
+                } while (
+                    !(l_nxt == l_max || r_download < ((1.0 * rates[l_nxt + 1]) / rates[l_cur])));
             }
         }
     }
 
-  // Pass the results back through the reference variables
-  delay = Seconds (0);
-  nextRate = rates[l_nxt];
+    // Pass the results back through the reference variables
+    delay = Seconds(0);
+    nextRate = rates[l_nxt];
 }
 
 } /* namespace ns3 */
