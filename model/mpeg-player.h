@@ -21,6 +21,7 @@
 #ifndef MPEG_PLAYER_H_
 #define MPEG_PLAYER_H_
 
+#include "ns3/nstime.h"
 #include "ns3/packet.h"
 #include "ns3/ptr.h"
 
