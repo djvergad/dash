@@ -161,44 +161,32 @@ FdashClient::CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay)
     delay = Seconds(0);
     if (nextRate > currRate)
     {
-        /*
-           double incrProb = std::pow(0.8,
-           (std::log10((double) currRate) - 5) / std::log10(1.4));
-
-           UniformVariable uv;
-           double rand = uv.GetValue();
-           NS_LOG_INFO(currRate << " " << incrProb << " " << rand);
-           if (rand > incrProb)
-           {
-           nextRate = currRate;
-           }
-           */
-        double t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-        /*std::cerr << "bef: " << t_60 << std::endl;*/
-        if (t_60 < t)
+        double t_lim = currDt + (m_bitrateEstimate / nextRate - 1) * 2*t;
+        /*std::cerr << "bef: " << t_lim << std::endl;*/
+        if (t_lim < t)
         {
             nextRate = currRate;
-            t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-            /*std::cerr << "aft: " << t_60 << std::endl;*/
-            if (t_60 > t)
+            t_lim = currDt + (m_bitrateEstimate / nextRate - 1) * 2*t;
+            /*std::cerr << "aft: " << t_lim << std::endl;*/
+            if (t_lim > t)
             {
-                // delay = Seconds(t_60 - t);
+                // delay = Seconds(t_lim - t);
             }
         }
         /*std::cerr << b_delay.GetSeconds() << std::endl;*/
     }
     else if (nextRate < currRate && m_interruptionLimit == rates.back())
     {
-        double t_60 = currDt + (m_bitrateEstimate / nextRate - 1) * 60;
-        // std::cerr << "bef: " << t_60 << std::endl;
-        if (t_60 > t)
+        double t_lim = currDt + (m_bitrateEstimate / nextRate - 1) * 2 * t;
+        // std::cerr << "bef: " << t_lim << std::endl;
+        if (t_lim > t)
         {
-            t_60 = currDt + (m_bitrateEstimate / currRate - 1) * 60;
-            if (t_60 > t)
+            t_lim = currDt + (m_bitrateEstimate / currRate - 1) * 2 * t;
+            if (t_lim > t)
             {
                 nextRate = currRate;
             }
-            //   std::cerr << "aft: " << t_60 << std::endl;
+            //   std::cerr << "aft: " << t_lim << std::endl;
         }
     }
 

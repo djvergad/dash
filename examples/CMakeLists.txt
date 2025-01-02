@@ -26,3 +26,12 @@ build_lib_example(
   LIBRARIES_TO_LINK
     ${libdash}
 )
+
+build_lib_example(
+  NAME dash-cttc-qos
+  SOURCE_FILES dash-cttc-qos.cc
+  LIBRARIES_TO_LINK
+    ${libdash}
+    ${libnr}
+    ${libflow-monitor}
+)
