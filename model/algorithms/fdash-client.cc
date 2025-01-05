@@ -149,10 +149,10 @@ FdashClient::CalcNextSegment(uint32_t currRate, uint32_t& nextRate, Time& delay)
 
     for (uint32_t rate : rates)
     {
-        NS_LOG_INFO("result: " << result << " rate: " << rate);
+        NS_LOG_DEBUG("result: " << result << " rate: " << rate);
         if (result > rate)
         {
-            NS_LOG_INFO("nextRate: " << nextRate);
+            NS_LOG_DEBUG("nextRate: " << nextRate);
 
             nextRate = rate;
         }

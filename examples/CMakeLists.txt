@@ -27,11 +27,13 @@ build_lib_example(
     ${libdash}
 )
 
-build_lib_example(
-  NAME dash-cttc-qos
-  SOURCE_FILES dash-cttc-qos.cc
-  LIBRARIES_TO_LINK
-    ${libdash}
-    ${libnr}
-    ${libflow-monitor}
-)
+if (libnr)
+  build_lib_example(
+    NAME dash-cttc-qos
+    SOURCE_FILES dash-cttc-qos.cc
+    LIBRARIES_TO_LINK
+      ${libdash}
+      ${libnr}
+      ${libflow-monitor}
+   )
+endif()
