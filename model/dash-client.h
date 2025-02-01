@@ -119,7 +119,9 @@ class DashClient : public Application
     std::map<Time, Time> m_bufferState;
     uint32_t m_rateChanges;
     Time m_target_dt;
-    std::map<Time, double> m_bitrates;
+    std::deque<std::pair<Time, double>> m_bitrateQueue;
+    double m_bitrateSum = 0;
+
     double m_bitrateEstimate;
     uint32_t m_segmentId; // The id of the current segment
 

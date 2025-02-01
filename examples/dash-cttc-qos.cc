@@ -66,7 +66,7 @@ main(int argc, char* argv[])
     std::string schedulerType = "PF";
     bool enableQoSLcScheduler = false;
 
-    uint8_t priorityTrafficScenario = 0; // default is saturation
+    uint8_t priorityTrafficScenario = 1; // default is saturation
 
     uint16_t mcsTable = 2;
 
@@ -163,12 +163,12 @@ main(int argc, char* argv[])
             (LogLevel)(LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_PREFIX_NODE | LOG_LEVEL_INFO);
         LogComponentEnable("NrMacSchedulerNs3", logLevel1);
         LogComponentEnable("NrMacSchedulerTdma", logLevel1);
+        LogComponentEnable("FdashClient", LOG_LEVEL_INFO);
     }
-    LogComponentEnable("FdashClient", LOG_LEVEL_ALL);
 
-    Config::SetDefault("ns3::NrRlcUm::MaxTxBufferSize", UintegerValue(999999999));
+    // Config::SetDefault("ns3::NrRlcUm::MaxTxBufferSize", UintegerValue(999999999));
     Config::SetDefault("ns3::NrRlcUm::EnablePdcpDiscarding", BooleanValue(enablePdcpDiscarding));
-    Config::SetDefault("ns3::NrRlcUm::DiscardTimerMs", UintegerValue(discardTimerMs));
+    // Config::SetDefault("ns3::NrRlcUm::DiscardTimerMs", UintegerValue(discardTimerMs));
 
     /*
      * Create the scenario. In our examples, we heavily use helpers that setup
@@ -774,6 +774,10 @@ main(int argc, char* argv[])
     else
     {
         Simulator::Stop(simTime + Seconds(2));
+        if (!logging)
+        {
+            LogComponentDisableAll(LOG_LEVEL_ALL);
+        }
         Simulator::Run();
     }
 
