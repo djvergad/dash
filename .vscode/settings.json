@@ -2,5 +2,10 @@
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/../../build/include"
-    ]
+    ],
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "array": "cpp",
+        "string_view": "cpp"
+    }
 }

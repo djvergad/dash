@@ -518,23 +518,19 @@ DashClient::GetSegmentFetchTime()
 void
 DashClient::AddBitRate(Time time, double bitrate)
 {
-    m_bitrates[time] = bitrate;
-    double sum = 0;
-    int count = 0;
-    for (auto it = m_bitrates.cbegin(); it != m_bitrates.cend();)
+    // Remove old values outside the window
+    while (!m_bitrateQueue.empty() && m_bitrateQueue.front().first < (time - m_window))
     {
-        if (it->first < (Simulator::Now() - m_window))
-        {
-            m_bitrates.erase(it++);
-        }
-        else
-        {
-            sum += it->second;
-            count++;
-            ++it;
-        }
+        m_bitrateSum -= m_bitrateQueue.front().second;
+        m_bitrateQueue.pop_front();
     }
-    m_bitrateEstimate = sum / count;
+
+    // Add the new value
+    m_bitrateQueue.emplace_back(time, bitrate);
+    m_bitrateSum += bitrate;
+
+    // Update the estimated bitrate
+    m_bitrateEstimate = m_bitrateSum / m_bitrateQueue.size();
 }
 
 } // Namespace ns3
