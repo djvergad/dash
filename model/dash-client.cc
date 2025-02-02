@@ -518,14 +518,6 @@ DashClient::GetSegmentFetchTime()
 void
 DashClient::AddBitRate(Time time, double bitrate)
 {
-
-    Time short_window = m_window / 100;
-
-
-    if (!m_bitrateQueue.empty() && time < (m_bitrateQueue.back().first - short_window)) {
-        return;
-    }
-
     // Remove old values outside the window
     while (!m_bitrateQueue.empty() && m_bitrateQueue.front().first < (time - m_window))
     {
